@@ -1,5 +1,3 @@
-import subprocess
-
 
 LPAREN, RPAREN = 1, 2
 LBRACE, RBRACE = 3, 4
