@@ -1,15 +1,14 @@
 def build_acg(formula):
   
-    acg = ACG()  # Create an empty ACG
+    acg = ACG()  
 
     def collect_subformulas(node):
         if node not in acg.states:
-            acg.add_state(node)  # Add the subformula as a state
+            acg.add_state(node)  
 
             if isinstance(node, Var):  
-                acg.add_proposition(node.name)  # Directly add atomic propositions
+                acg.add_proposition(node.name)  
 
-            # Recursively explore child nodes
             for child in getattr(node, "__dict__", {}).values():
                 if isinstance(child, ParseNode):
                     collect_subformulas(child)
@@ -18,7 +17,7 @@ def build_acg(formula):
                         if isinstance(item, ParseNode):
                             collect_subformulas(item)
 
-    collect_subformulas(formula)  # Populate ACG while computing closure
-    acg.add_initial_state(formula)  # Set the original formula as the initial state
+    collect_subformulas(formula)  
+    acg.add_initial_state(formula)  
 
-    return acg  # Return the constructed ACG
+    return acg  
