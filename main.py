@@ -220,7 +220,6 @@ class ACG:
         return self.transitions.get((state, input_symbol), {"universal": [], "existential": [], "epsilon": []})
 
     def __str__(self):
-        """Prints a readable representation of the ACG with formulas instead of object memory addresses."""
         state_formulas = [str(state) for state in self.states]
         alphabet_str = sorted(["{" + ", ".join(a) + "}" if a else "{}" for a in self.alphabet])
         return (
@@ -503,16 +502,15 @@ def formula_validity(tokens, strict_ATL=True):
 
 def build_acg(formula):
   
-    acg = ACG()  # Create an empty ACG
+    acg = ACG()  
 
     def collect_subformulas(node):
         if node not in acg.states:
-            acg.add_state(node)  # Add the subformula as a state
+            acg.add_state(node)  
 
             if isinstance(node, Var):  
-                acg.add_proposition(node.name)  # Directly add atomic propositions
+                acg.add_proposition(node.name)  
 
-            # Recursively explore child nodes
             for child in getattr(node, "__dict__", {}).values():
                 if isinstance(child, ParseNode):
                     collect_subformulas(child)
@@ -521,10 +519,10 @@ def build_acg(formula):
                         if isinstance(item, ParseNode):
                             collect_subformulas(item)
 
-    collect_subformulas(formula)  # Populate ACG while computing closure
-    acg.add_initial_state(formula)  # Set the original formula as the initial state
+    collect_subformulas(formula)  
+    acg.add_initial_state(formula)  
 
-    return acg  # Return the constructed ACG
+    return acg  
 
 
 
@@ -534,13 +532,11 @@ tokens = tokenize(source)
 try:
     formula = formula_validity(tokens, strict_ATL=True)  
     ast = parse(tokens)
-
-    # 📌 Directamente construimos el ACG mientras obtenemos el closure
     acg = build_acg(ast)
-
-    # 📌 Mostrar resultados
     print("\nACG Representation:")
     print(acg)
 
 except ValueError as e:
     print(e)
+
+
