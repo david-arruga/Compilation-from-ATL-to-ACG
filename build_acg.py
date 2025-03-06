@@ -1,5 +1,5 @@
 def build_acg(formula):
-  
+
     acg = ACG()  
 
     def collect_subformulas(node):
