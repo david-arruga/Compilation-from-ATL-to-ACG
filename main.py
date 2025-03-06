@@ -31,6 +31,9 @@ class Var(ParseNode):
     def to_formula(self):
         return self.name
 
+    def __str__(self):
+        return self.to_formula()
+
     def to_tree(self, level=0):
         indent = "    " * level
         return f"{indent}Var('{self.name}')"
@@ -43,9 +46,8 @@ class And(ParseNode):
     def to_formula(self):
         return f"({self.lhs} and {self.rhs})"
 
-    def to_tree(self, level=0):
-        indent = "    " * level
-        return f"{indent}And(\n{self.lhs.to_tree(level + 1)},\n{self.rhs.to_tree(level + 1)}\n{indent})"
+    def __str__(self):
+        return self.to_formula()
 
 class Or(ParseNode):
     def __init__(self, lhs, rhs):
@@ -55,9 +57,8 @@ class Or(ParseNode):
     def to_formula(self):
         return f"({self.lhs} or {self.rhs})"
 
-    def to_tree(self, level=0):
-        indent = "    " * level
-        return f"{indent}Or(\n{self.lhs.to_tree(level + 1)},\n{self.rhs.to_tree(level + 1)}\n{indent})"
+    def __str__(self):
+        return self.to_formula()
 
 class Not(ParseNode):
     def __init__(self, sub):
@@ -66,20 +67,18 @@ class Not(ParseNode):
     def to_formula(self):
         return f"(not {self.sub})"
 
-    def to_tree(self, level=0):
-        indent = "    " * level
-        return f"{indent}Not(\n{self.sub.to_tree(level + 1)}\n{indent})"
+    def __str__(self):
+        return self.to_formula()
 
 class Next(ParseNode):
     def __init__(self, sub):
         self.sub = sub
 
     def to_formula(self):
-        return f"( ⃝  {self.sub})"
+        return f"(⃝ {self.sub})"
 
-    def to_tree(self, level=0):
-        indent = "    " * level
-        return f"{indent}Next(\n{self.sub.to_tree(level + 1)}\n{indent})"
+    def __str__(self):
+        return self.to_formula()
 
 class Until(ParseNode):
     def __init__(self, lhs, rhs):
@@ -89,9 +88,8 @@ class Until(ParseNode):
     def to_formula(self):
         return f"({self.lhs} U {self.rhs})"
 
-    def to_tree(self, level=0):
-        indent = "    " * level
-        return f"{indent}Until(\n{self.lhs.to_tree(level + 1)},\n{self.rhs.to_tree(level + 1)}\n{indent})"
+    def __str__(self):
+        return self.to_formula()
 
 class Release(ParseNode):
     def __init__(self, lhs, rhs):
@@ -101,9 +99,8 @@ class Release(ParseNode):
     def to_formula(self):
         return f"({self.lhs} R {self.rhs})"
 
-    def to_tree(self, level=0):
-        indent = "    " * level
-        return f"{indent}Release(\n{self.lhs.to_tree(level + 1)},\n{self.rhs.to_tree(level + 1)}\n{indent})"
+    def __str__(self):
+        return self.to_formula()
 
 class Globally(ParseNode):
     def __init__(self, sub):
@@ -112,9 +109,8 @@ class Globally(ParseNode):
     def to_formula(self):
         return f"(□ {self.sub})"
 
-    def to_tree(self, level=0):
-        indent = "    " * level
-        return f"{indent}Globally(\n{self.sub.to_tree(level + 1)}\n{indent})"
+    def __str__(self):
+        return self.to_formula()
 
 class Eventually(ParseNode):
     def __init__(self, sub):
@@ -123,9 +119,8 @@ class Eventually(ParseNode):
     def to_formula(self):
         return f"(◇ {self.sub})"
 
-    def to_tree(self, level=0):
-        indent = "    " * level
-        return f"{indent}Eventually(\n{self.sub.to_tree(level + 1)}\n{indent})"
+    def __str__(self):
+        return self.to_formula()
 
 class Implies(ParseNode):
     def __init__(self, lhs, rhs):
@@ -135,9 +130,8 @@ class Implies(ParseNode):
     def to_formula(self):
         return f"({self.lhs} -> {self.rhs})"
 
-    def to_tree(self, level=0):
-        indent = "    " * level
-        return f"{indent}Implies(\n{self.lhs.to_tree(level + 1)},\n{self.rhs.to_tree(level + 1)}\n{indent})"
+    def __str__(self):
+        return self.to_formula()
 
 class Iff(ParseNode):
     def __init__(self, lhs, rhs):
@@ -147,9 +141,8 @@ class Iff(ParseNode):
     def to_formula(self):
         return f"({self.lhs} <-> {self.rhs})"
 
-    def to_tree(self, level=0):
-        indent = "    " * level
-        return f"{indent}Iff(\n{self.lhs.to_tree(level + 1)},\n{self.rhs.to_tree(level + 1)}\n{indent})"
+    def __str__(self):
+        return self.to_formula()
 
 class Modality(ParseNode):
     def __init__(self, agents, sub):
@@ -160,11 +153,9 @@ class Modality(ParseNode):
         agents_str = ", ".join(self.agents)
         return f"<{agents_str}> {self.sub}"
 
-    def to_tree(self, level=0):
-        indent = "    " * level
-        agents_str = ", ".join(self.agents)
-        return f"{indent}Modality([{agents_str}],\n{self.sub.to_tree(level + 1)}\n{indent})"
-    
+    def __str__(self):
+        return self.to_formula()
+
 class ACG:
     def __init__(self, propositions=None, states=None, initial_state=None, transitions=None, final_states=None):
         self.propositions = propositions if propositions else set()  
@@ -204,9 +195,7 @@ class ACG:
             raise ValueError(f"Input symbol {input_symbol} is not in the alphabet (2^AP).")
         if (state_from, input_symbol) not in self.transitions:
             self.transitions[(state_from, input_symbol)] = {
-                "universal": [],
-                "existential": [],
-                "epsilon": []
+                "universal": [], "existential": [], "epsilon": []
             }
         if atom_type in ["universal", "existential"]:
             if agents is None:
@@ -229,6 +218,7 @@ class ACG:
             f"  Initial State: {self.initial_state}\n"
             f")"
         )
+
 
                
 def tokenize(source):
@@ -501,10 +491,10 @@ def formula_validity(tokens, strict_ATL=True):
     return tokens  
 
 def build_acg(formula):
-  
     acg = ACG()  
 
     def collect_subformulas(node):
+
         if node not in acg.states:
             acg.add_state(node)  
 
@@ -519,24 +509,84 @@ def build_acg(formula):
                         if isinstance(item, ParseNode):
                             collect_subformulas(item)
 
-    collect_subformulas(formula)  
+    collect_subformulas(formula)
     acg.add_initial_state(formula)  
 
-    return acg  
+    for state in acg.states:
+        for sigma in acg.alphabet:  
+            
+            if isinstance(state, Var):  
+                if state.name in sigma:
+                    acg.add_transition(state, sigma, state, "epsilon")  # True 
+                else:
+                    acg.add_transition(state, sigma, state, "epsilon")  # False 
+            
+            elif isinstance(state, Not) and isinstance(state.sub, Var):  
+                negated_prop = state.sub.name
+                if negated_prop in sigma:
+                    acg.add_transition(state, sigma, state, "epsilon")  # False 
+                else:
+                    acg.add_transition(state, sigma, state, "epsilon")  # True 
+
+            elif isinstance(state, And):  
+                acg.add_transition(state, sigma, state.lhs, "epsilon")  
+                acg.add_transition(state, sigma, state.rhs, "epsilon")  
+            
+            elif isinstance(state, Or):  
+                acg.add_transition(state, sigma, state.lhs, "epsilon")  
+                acg.add_transition(state, sigma, state.rhs, "epsilon")  
 
 
+            elif isinstance(state, Modality) and isinstance(state.sub, Next):
+                next_state = state.sub.sub  
+                agents = frozenset(state.agents)  
+                acg.add_transition(state, sigma, next_state, "existential", agents)  
 
-source = "<A> globally (p or <A> eventually q)"
+            elif isinstance(state, Modality) and isinstance(state.sub, Globally):
+                phi = state.sub.sub  
+                agents = frozenset(state.agents)  
+                acg.add_transition(state, sigma, phi, "epsilon")
+                acg.add_transition(state, sigma, state, "existential", agents)
+
+            elif isinstance(state, Modality) and isinstance(state.sub, Until):
+                phi1 = state.sub.lhs  
+                phi2 = state.sub.rhs  
+                agents = frozenset(state.agents)  
+                acg.add_transition(state, sigma, phi2, "epsilon")
+                acg.add_transition(state, sigma, phi1, "epsilon")
+                acg.add_transition(state, sigma, state, "existential", agents)
+
+
+    return acg
+
+
+source = "<A> globally (p and <A> next q)"
 tokens = tokenize(source)
 
 try:
+
     formula = formula_validity(tokens, strict_ATL=True)  
     ast = parse(tokens)
     acg = build_acg(ast)
-    print("\nACG Representation:")
+    print("\n==== ACG Representation ====")
     print(acg)
+    print("\nClosure Set (States of ACG):")
+    for state in acg.states:
+        print(state)
+    print("\nAlphabet (Powerset of Atomic Propositions):")
+    for symbol in acg.alphabet:
+        print(symbol)
+    print("\nInitial State of ACG:")
+    print(acg.initial_state)
+    print("\n==== Transition Function ====")
+    for (state, symbol), transitions in acg.transitions.items():
+        formatted_symbol = "{" + ", ".join(symbol) + "}" if symbol else "{}"  # Clean frozenset 
+        formatted_transitions = {
+            key: [(str(dest_state), transition_type, "{" + ", ".join(rest[0]) + "}") if rest else (str(dest_state), transition_type)
+                for dest_state, transition_type, *rest in values]
+            for key, values in transitions.items()
+        }
+        print(f"\nδ({state}, {formatted_symbol}) → {formatted_transitions}")
 
 except ValueError as e:
-    print(e)
-
-
+    print(e)  
