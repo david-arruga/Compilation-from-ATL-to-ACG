@@ -1,6 +1,6 @@
-# ATL Automaton Generator
+# ATL to ACG
 
-## Currently implemented
+## Currently implemented functions
 - **Tokenization**
 - **Parsing into AST**
 - **Transformation to Fundamental AST:** 
@@ -12,7 +12,7 @@
 
 
 ## Expected Output
-For each test formula, the script outputs:
+For each test formula, the code outputs:
 - The original formula.
 - Tokenized representation.
 - Initial AST structure.
