@@ -1,4 +1,4 @@
-def tokenize(source):
+def tokenize(source): 
     tokens = []
     cursor = 0
     length = len(source)
@@ -39,7 +39,9 @@ def tokenize(source):
             tokens.append((OR, symbol))
         elif symbol == "&":
             tokens.append((AND, symbol))
-
+        elif symbol in SYMBOL_MAP:
+            tokens.append((SYMBOL_MAP[symbol], symbol))
+        
         elif symbol.isalpha():
             buffer = symbol
             cursor += 1
@@ -50,7 +52,7 @@ def tokenize(source):
             if inside_agents:
                 tokens.append((AGENT_NAME, buffer))
             else:
-                token_type = keywords.get(buffer, PROPOSITION)
+                token_type = keywords.get(buffer.lower(), PROPOSITION)  
                 tokens.append((token_type, buffer))
 
             cursor -= 1  
