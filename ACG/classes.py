@@ -9,7 +9,31 @@ class ParseNode:
         indent = "    " * level
         return f"{indent}{self.__class__.__name__}\n"
     
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __hash__(self):
+        def make_hashable(value):
+            if isinstance(value, list):
+                return tuple(value)
+            elif isinstance(value, dict):
+                return tuple(sorted(value.items()))
+            elif isinstance(value, set):
+                return frozenset(value)
+            elif isinstance(value, ParseNode):
+                return hash(value)
+            return value
+
+        items = tuple(sorted((k, make_hashable(v)) for k, v in self.__dict__.items()))
+        return hash((self.__class__.__name__, items))
+    
 class T(ParseNode):    
+    def __eq__(self, other):
+        return isinstance(other, T)
+
+    def __hash__(self):
+        return hash("T")
+
     def to_formula(self):
         return "⊤"
 
@@ -20,9 +44,32 @@ class T(ParseNode):
         indent = "    " * level
         return f"{indent}T"
 
+class F(ParseNode):
+    def __eq__(self, other):
+        return isinstance(other, F)
+
+    def __hash__(self):
+        return hash("F")
+
+    def to_formula(self):
+        return "⊥"
+
+    def __str__(self):
+        return self.to_formula()
+
+    def to_tree(self, level=0):
+        indent = "    " * level
+        return f"{indent}F"
+
 class Var(ParseNode):
     def __init__(self, name):
         self.name = name
+
+    def __eq__(self, other):
+        return isinstance(other, Var) and self.name == other.name
+
+    def __hash__(self):
+        return hash(("Var", self.name))
 
     def to_formula(self):
         return self.name
@@ -42,7 +89,7 @@ class And(ParseNode):
     def to_formula(self):
         lhs_str = f"({self.lhs})" if isinstance(self.lhs, (And,Or)) else str(self.lhs)
         rhs_str = f"({self.rhs})" if isinstance(self.rhs, (And,Or)) else str(self.rhs)
-        return f"{lhs_str} and {rhs_str}"
+        return f"{lhs_str} ∧ {rhs_str}"
     
     def __str__(self):
         return self.to_formula()
@@ -59,7 +106,7 @@ class Or(ParseNode):
     def to_formula(self):
         lhs_str = f"({self.lhs})" if isinstance(self.lhs, (And,Or)) else str(self.lhs)
         rhs_str = f"({self.rhs})" if isinstance(self.rhs, (And,Or)) else str(self.rhs)
-        return f"{lhs_str} or {rhs_str}"
+        return f"{lhs_str} ∨ {rhs_str}"
 
     def __str__(self):
         return self.to_formula()
@@ -73,7 +120,7 @@ class Not(ParseNode):
         self.sub = sub
 
     def to_formula(self):
-        return f"(not {self.sub})"
+        return f"(¬ {self.sub})"
 
     def __str__(self):
         return self.to_formula()
@@ -194,14 +241,49 @@ class Modality(ParseNode):
             agents_str = ", ".join(self.agents)
             return f"{indent}Modality ({agents_str})\n{self.sub.to_tree(level+1)}"
 
+class DualModality(ParseNode):
+    def __init__(self, agents, sub):
+        self.agents = agents
+        self.sub = sub
+
+    def to_formula(self):
+        agents_str = ", ".join(self.agents)
+        return f"[{agents_str}] {self.sub}"
+
+    def __str__(self):
+        return self.to_formula()
+
+    def to_tree(self, level=0):
+        indent = "    " * level
+        agents_str = ", ".join(self.agents)
+        return f"{indent}DualModality ({agents_str})\n{self.sub.to_tree(level+1)}"
+
+    def __eq__(self, other):
+        return isinstance(other, DualModality) and self.agents == other.agents and self.sub == other.sub
+
+    def __hash__(self):
+        return hash(("DualModality", frozenset(self.agents), self.sub))
+
 class Top:
+    def __eq__(self, other):
+        return isinstance(other, Top)
+
+    def __hash__(self):
+        return hash("Top")
+
     def __str__(self):
         return "⊤"
-    
+
 class Bottom:
+    def __eq__(self, other):
+        return isinstance(other, Bottom)
+
+    def __hash__(self):
+        return hash("Bottom")
+
     def __str__(self):
         return "⊥"
-
+    
 class Conj(ParseNode):
     def __init__(self, lhs, rhs):
         self.lhs = lhs
@@ -212,6 +294,12 @@ class Conj(ParseNode):
 
     def __str__(self):
         return self.to_formula()
+    
+    def __eq__(self, other):
+        return isinstance(other, Conj) and self.lhs == other.lhs and self.rhs == other.rhs
+
+    def __hash__(self):
+        return hash(('Conj', self.lhs, self.rhs))
 
 class Disj(ParseNode):
     def __init__(self, lhs, rhs):
@@ -223,11 +311,27 @@ class Disj(ParseNode):
 
     def __str__(self):
         return self.to_formula()
+    
+    def __eq__(self, other):
+        return isinstance(other, Disj) and self.lhs == other.lhs and self.rhs == other.rhs
+
+    def __hash__(self):
+        return hash(('Disj', self.lhs, self.rhs))
 
 class UniversalAtom:
     def __init__(self, state, agents):
         self.state = state
         self.agents = frozenset(agents)
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, UniversalAtom) and
+            self.state == other.state and
+            self.agents == other.agents
+        )
+
+    def __hash__(self):
+        return hash(("UniversalAtom", self.state, self.agents))
 
     def __str__(self):
         agents_str = ", ".join(sorted(self.agents)) if self.agents else "∅"
@@ -238,6 +342,16 @@ class ExistentialAtom:
         self.state = state
         self.agents = frozenset(agents)
 
+    def __eq__(self, other):
+        return (
+            isinstance(other, ExistentialAtom) and
+            self.state == other.state and
+            self.agents == other.agents
+        )
+
+    def __hash__(self):
+        return hash(("ExistentialAtom", self.state, self.agents))
+
     def __str__(self):
         agents_str = ", ".join(sorted(self.agents)) if self.agents else "∅"
         return f"( {self.state}, ◇, {{{agents_str}}} )"
@@ -246,9 +360,15 @@ class EpsilonAtom:
     def __init__(self, state):
         self.state = state
 
+    def __eq__(self, other):
+        return isinstance(other, EpsilonAtom) and self.state == other.state
+
+    def __hash__(self):
+        return hash(("EpsilonAtom", self.state))
+
     def __str__(self):
         return f"( {self.state}, ε )"
-
+    
 class ACG:
     def __init__(self):
         self.propositions = set()  
@@ -259,7 +379,12 @@ class ACG:
         self.alphabet = set()  
 
     def generate_alphabet(self):
-        self.alphabet = set(frozenset(s) for s in chain.from_iterable(combinations(self.propositions, r) for r in range(len(self.propositions) + 1)))
+        self.alphabet = set(
+            frozenset(s)
+            for s in chain.from_iterable(
+                combinations(self.propositions, r) for r in range(len(self.propositions) + 1)
+            )
+        )
 
     def add_proposition(self, proposition):
         self.propositions.add(proposition)
@@ -289,8 +414,11 @@ class ACG:
 
     def __str__(self):
         state_formulas = sorted(str(state) for state in self.states)
+        final_formulas = sorted(str(state) for state in self.final_states)
 
-        alphabet_str = sorted(["{" + ", ".join(sorted(a)) + "}" if a else "{}" for a in self.alphabet])
+        alphabet_str = sorted(
+            ["{" + ", ".join(sorted(a)) + "}" if a else "{}" for a in self.alphabet]
+        )
 
         formatted_transitions = []
         for (state, sigma) in self.transitions:
@@ -303,7 +431,9 @@ class ACG:
             f"  Alphabet: {alphabet_str},\n"
             f"  States: {state_formulas},\n"
             f"  Initial State: {self.initial_state},\n"
+            f"  Final States: {final_formulas},\n"
             f"  Transitions:\n" +
             "\n".join(formatted_transitions) +
             f"\n)"
-    )
+        )
+
