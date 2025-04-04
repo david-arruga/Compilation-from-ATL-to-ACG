@@ -1,4 +1,7 @@
-from itertools import chain, combinations
+from itertools import chain, combinations, product
+from copy import deepcopy
+
+
 
 LPAREN, RPAREN = 1, 2
 LBRACE, RBRACE = 3, 4
@@ -10,14 +13,21 @@ NEXT, UNTIL, RELEASE = 13, 14, 15
 GLOBALLY, EVENTUALLY = 16, 17
 PROPOSITION, AGENT_NAME = 18, 19
 NAME, UNKNOWN, END_OF_INPUT = 20, 21, 22
-
+LBRACKET, RBRACKET = 23,24
 SYMBOL_MAP = {
     "◯": NEXT,
     "□": GLOBALLY,
     "◇": EVENTUALLY,
     "U": UNTIL,
-    "R": RELEASE
+    "R": RELEASE,
+    "G": GLOBALLY,
+    "F": EVENTUALLY,
+    "X": NEXT
 }
+
+#===========
+# ACG
+#===========
 
 class ParseNode:
     def __str__(self):
@@ -30,7 +40,31 @@ class ParseNode:
         indent = "    " * level
         return f"{indent}{self.__class__.__name__}\n"
     
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __hash__(self):
+        def make_hashable(value):
+            if isinstance(value, list):
+                return tuple(value)
+            elif isinstance(value, dict):
+                return tuple(sorted(value.items()))
+            elif isinstance(value, set):
+                return frozenset(value)
+            elif isinstance(value, ParseNode):
+                return hash(value)
+            return value
+
+        items = tuple(sorted((k, make_hashable(v)) for k, v in self.__dict__.items()))
+        return hash((self.__class__.__name__, items))
+    
 class T(ParseNode):    
+    def __eq__(self, other):
+        return isinstance(other, T)
+
+    def __hash__(self):
+        return hash("T")
+
     def to_formula(self):
         return "⊤"
 
@@ -41,9 +75,32 @@ class T(ParseNode):
         indent = "    " * level
         return f"{indent}T"
 
+class F(ParseNode):
+    def __eq__(self, other):
+        return isinstance(other, F)
+
+    def __hash__(self):
+        return hash("F")
+
+    def to_formula(self):
+        return "⊥"
+
+    def __str__(self):
+        return self.to_formula()
+
+    def to_tree(self, level=0):
+        indent = "    " * level
+        return f"{indent}F"
+
 class Var(ParseNode):
     def __init__(self, name):
         self.name = name
+
+    def __eq__(self, other):
+        return isinstance(other, Var) and self.name == other.name
+
+    def __hash__(self):
+        return hash(("Var", self.name))
 
     def to_formula(self):
         return self.name
@@ -63,7 +120,7 @@ class And(ParseNode):
     def to_formula(self):
         lhs_str = f"({self.lhs})" if isinstance(self.lhs, (And,Or)) else str(self.lhs)
         rhs_str = f"({self.rhs})" if isinstance(self.rhs, (And,Or)) else str(self.rhs)
-        return f"{lhs_str} and {rhs_str}"
+        return f"{lhs_str} ∧ {rhs_str}"
     
     def __str__(self):
         return self.to_formula()
@@ -80,7 +137,7 @@ class Or(ParseNode):
     def to_formula(self):
         lhs_str = f"({self.lhs})" if isinstance(self.lhs, (And,Or)) else str(self.lhs)
         rhs_str = f"({self.rhs})" if isinstance(self.rhs, (And,Or)) else str(self.rhs)
-        return f"{lhs_str} or {rhs_str}"
+        return f"{lhs_str} ∨ {rhs_str}"
 
     def __str__(self):
         return self.to_formula()
@@ -94,7 +151,7 @@ class Not(ParseNode):
         self.sub = sub
 
     def to_formula(self):
-        return f"(not {self.sub})"
+        return f"(¬ {self.sub})"
 
     def __str__(self):
         return self.to_formula()
@@ -215,14 +272,49 @@ class Modality(ParseNode):
             agents_str = ", ".join(self.agents)
             return f"{indent}Modality ({agents_str})\n{self.sub.to_tree(level+1)}"
 
+class DualModality(ParseNode):
+    def __init__(self, agents, sub):
+        self.agents = agents
+        self.sub = sub
+
+    def to_formula(self):
+        agents_str = ", ".join(self.agents)
+        return f"[{agents_str}] {self.sub}"
+
+    def __str__(self):
+        return self.to_formula()
+
+    def to_tree(self, level=0):
+        indent = "    " * level
+        agents_str = ", ".join(self.agents)
+        return f"{indent}DualModality ({agents_str})\n{self.sub.to_tree(level+1)}"
+
+    def __eq__(self, other):
+        return isinstance(other, DualModality) and self.agents == other.agents and self.sub == other.sub
+
+    def __hash__(self):
+        return hash(("DualModality", frozenset(self.agents), self.sub))
+
 class Top:
+    def __eq__(self, other):
+        return isinstance(other, Top)
+
+    def __hash__(self):
+        return hash("Top")
+
     def __str__(self):
         return "⊤"
-    
+
 class Bottom:
+    def __eq__(self, other):
+        return isinstance(other, Bottom)
+
+    def __hash__(self):
+        return hash("Bottom")
+
     def __str__(self):
         return "⊥"
-
+    
 class Conj(ParseNode):
     def __init__(self, lhs, rhs):
         self.lhs = lhs
@@ -233,6 +325,12 @@ class Conj(ParseNode):
 
     def __str__(self):
         return self.to_formula()
+    
+    def __eq__(self, other):
+        return isinstance(other, Conj) and self.lhs == other.lhs and self.rhs == other.rhs
+
+    def __hash__(self):
+        return hash(('Conj', self.lhs, self.rhs))
 
 class Disj(ParseNode):
     def __init__(self, lhs, rhs):
@@ -244,11 +342,27 @@ class Disj(ParseNode):
 
     def __str__(self):
         return self.to_formula()
+    
+    def __eq__(self, other):
+        return isinstance(other, Disj) and self.lhs == other.lhs and self.rhs == other.rhs
+
+    def __hash__(self):
+        return hash(('Disj', self.lhs, self.rhs))
 
 class UniversalAtom:
     def __init__(self, state, agents):
         self.state = state
         self.agents = frozenset(agents)
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, UniversalAtom) and
+            self.state == other.state and
+            self.agents == other.agents
+        )
+
+    def __hash__(self):
+        return hash(("UniversalAtom", self.state, self.agents))
 
     def __str__(self):
         agents_str = ", ".join(sorted(self.agents)) if self.agents else "∅"
@@ -259,6 +373,16 @@ class ExistentialAtom:
         self.state = state
         self.agents = frozenset(agents)
 
+    def __eq__(self, other):
+        return (
+            isinstance(other, ExistentialAtom) and
+            self.state == other.state and
+            self.agents == other.agents
+        )
+
+    def __hash__(self):
+        return hash(("ExistentialAtom", self.state, self.agents))
+
     def __str__(self):
         agents_str = ", ".join(sorted(self.agents)) if self.agents else "∅"
         return f"( {self.state}, ◇, {{{agents_str}}} )"
@@ -267,9 +391,15 @@ class EpsilonAtom:
     def __init__(self, state):
         self.state = state
 
+    def __eq__(self, other):
+        return isinstance(other, EpsilonAtom) and self.state == other.state
+
+    def __hash__(self):
+        return hash(("EpsilonAtom", self.state))
+
     def __str__(self):
         return f"( {self.state}, ε )"
-
+    
 class ACG:
     def __init__(self):
         self.propositions = set()  
@@ -280,7 +410,12 @@ class ACG:
         self.alphabet = set()  
 
     def generate_alphabet(self):
-        self.alphabet = set(frozenset(s) for s in chain.from_iterable(combinations(self.propositions, r) for r in range(len(self.propositions) + 1)))
+        self.alphabet = set(
+            frozenset(s)
+            for s in chain.from_iterable(
+                combinations(self.propositions, r) for r in range(len(self.propositions) + 1)
+            )
+        )
 
     def add_proposition(self, proposition):
         self.propositions.add(proposition)
@@ -310,8 +445,11 @@ class ACG:
 
     def __str__(self):
         state_formulas = sorted(str(state) for state in self.states)
+        final_formulas = sorted(str(state) for state in self.final_states)
 
-        alphabet_str = sorted(["{" + ", ".join(sorted(a)) + "}" if a else "{}" for a in self.alphabet])
+        alphabet_str = sorted(
+            ["{" + ", ".join(sorted(a)) + "}" if a else "{}" for a in self.alphabet]
+        )
 
         formatted_transitions = []
         for (state, sigma) in self.transitions:
@@ -324,12 +462,11 @@ class ACG:
             f"  Alphabet: {alphabet_str},\n"
             f"  States: {state_formulas},\n"
             f"  Initial State: {self.initial_state},\n"
+            f"  Final States: {final_formulas},\n"
             f"  Transitions:\n" +
             "\n".join(formatted_transitions) +
             f"\n)"
-    )
-
-
+        )
 
 def tokenize(source): 
     tokens = []
@@ -366,13 +503,19 @@ def tokenize(source):
         elif symbol == ">":
             tokens.append((RTRI, symbol))
             inside_agents = False  
+        elif symbol == "[":
+            tokens.append((LBRACKET, symbol))
+            inside_agents = True
+        elif symbol == "]":
+            tokens.append((RBRACKET, symbol))
+            inside_agents = False
         elif symbol == ",":
             tokens.append((COMMA, symbol))
         elif symbol == "|":
             tokens.append((OR, symbol))
         elif symbol == "&":
             tokens.append((AND, symbol))
-        elif symbol in SYMBOL_MAP:
+        elif symbol in SYMBOL_MAP and inside_agents == False:
             tokens.append((SYMBOL_MAP[symbol], symbol))
         
         elif symbol.isalpha():
@@ -439,29 +582,40 @@ def parse(tokens):
             if current_token()[0] != RTRI:
                 raise ValueError("Parse error: Expected '>' but not found.")
             advance()
-            return Modality(agents, parse_temporal())  
+            return Modality(agents, parse_temporal())
+
+        elif token[0] == LBRACKET:
+            agents = []
+            advance()
+            while current_token()[0] == AGENT_NAME:
+                agents.append(current_token()[1])
+                advance()
+                if current_token()[0] == COMMA:
+                    advance()
+            if current_token()[0] != RBRACKET:
+                raise ValueError("Parse error: Expected ']' but not found.")
+            advance()
+            return DualModality(agents, parse_temporal())
 
         else:
             raise ValueError(f"Parse error: unexpected token '{token[1]}'.")
 
     def parse_temporal():
         token = current_token()
-        
+
         if token[0] == NEXT:
             advance()
-            return Next(parse_temporal())  
+            return Next(parse_temporal())
 
         elif token[0] == GLOBALLY:
             advance()
-            return Globally(parse_temporal())  
+            return Globally(parse_temporal())
 
         elif token[0] == EVENTUALLY:
             advance()
-            subformula = parse_temporal()  
+            return Eventually(parse_temporal())
 
-            return Eventually(subformula)  
-
-        elif token[0] == LTRI:  
+        elif token[0] == LTRI:
             agents = []
             advance()
             while current_token()[0] == AGENT_NAME:
@@ -472,26 +626,46 @@ def parse(tokens):
             if current_token()[0] != RTRI:
                 raise ValueError("Parse error: Expected '>' but not found.")
             advance()
-            
-            subformula = parse_temporal()
-            return Modality(agents, subformula)
+            return Modality(agents, parse_temporal())
+
+        elif token[0] == LBRACKET:
+            agents = []
+            advance()
+            while current_token()[0] == AGENT_NAME:
+                agents.append(current_token()[1])
+                advance()
+                if current_token()[0] == COMMA:
+                    advance()
+            if current_token()[0] != RBRACKET:
+                raise ValueError("Parse error: Expected ']' but not found.")
+            advance()
+            return DualModality(agents, parse_temporal())
 
         else:
-            return parse_atomic_formula()  
-
+            return parse_atomic_formula()
 
     def parse_until():
         result = parse_temporal()
-
         while current_token()[0] in {UNTIL, RELEASE}:
             token_type = current_token()[0]
             advance()
             rhs = parse_temporal()
 
-            if isinstance(result, Modality):
-                result = Modality(result.agents, Until(result.sub, rhs))  
-            else:
-                result = Until(result, rhs)
+            if token_type == UNTIL:
+                if isinstance(result, Modality):
+                    result = Modality(result.agents, Until(result.sub, rhs))
+                elif isinstance(result, DualModality):
+                    result = DualModality(result.agents, Until(result.sub, rhs))
+                else:
+                    result = Until(result, rhs)
+
+            elif token_type == RELEASE:
+                if isinstance(result, Modality):
+                    result = Modality(result.agents, Release(result.sub, rhs))
+                elif isinstance(result, DualModality):
+                    result = DualModality(result.agents, Release(result.sub, rhs))
+                else:
+                    result = Release(result, rhs)
 
         return result
 
@@ -532,59 +706,202 @@ def parse(tokens):
     if current_token()[0] != END_OF_INPUT:
         raise ValueError(f"Parse error: Unexpected token '{current_token()[1]}' at end of input.")
 
-    return ast_root 
+    return ast_root
 
-def transform_to_fundamental(node):
-
+def eliminate_f_and_r(node: ParseNode) -> ParseNode:
     if isinstance(node, Eventually):
-        return Until(T(), transform_to_fundamental(node.sub), generated_from_eventually=True)  
+        return Until(T(), eliminate_f_and_r(node.sub), generated_from_eventually=True)
 
     elif isinstance(node, Release):
-        lhs_transformed = transform_to_fundamental(node.lhs)
-        rhs_transformed = transform_to_fundamental(node.rhs)
-        
-        if isinstance(lhs_transformed, Modality):
-            return Modality(lhs_transformed.agents, Not(Until(Not(lhs_transformed.sub), Not(rhs_transformed))))
-        
-        return Not(Until(Not(lhs_transformed), Not(rhs_transformed)))
+        lhs = eliminate_f_and_r(node.lhs)
+        rhs = eliminate_f_and_r(node.rhs)
+        return Not(Until(Not(lhs), Not(rhs)))
 
     elif isinstance(node, And):
-        return And(transform_to_fundamental(node.lhs), transform_to_fundamental(node.rhs))
+        return And(eliminate_f_and_r(node.lhs), eliminate_f_and_r(node.rhs))
 
     elif isinstance(node, Or):
-        return Or(transform_to_fundamental(node.lhs), transform_to_fundamental(node.rhs))
+        return Or(eliminate_f_and_r(node.lhs), eliminate_f_and_r(node.rhs))
 
     elif isinstance(node, Not):
-        return Not(transform_to_fundamental(node.sub))
+        return Not(eliminate_f_and_r(node.sub))
 
     elif isinstance(node, Next):
-        return Next(transform_to_fundamental(node.sub))
+        return Next(eliminate_f_and_r(node.sub))
 
     elif isinstance(node, Until):
-        return Until(transform_to_fundamental(node.lhs), transform_to_fundamental(node.rhs))
-
+        return Until(eliminate_f_and_r(node.lhs), eliminate_f_and_r(node.rhs))
 
     elif isinstance(node, Globally):
-        return Globally(transform_to_fundamental(node.sub))
+        return Globally(eliminate_f_and_r(node.sub))
+
+    elif isinstance(node, Eventually):
+        return Until(T(), eliminate_f_and_r(node.sub), generated_from_eventually=True)
+
+    elif isinstance(node, Implies):
+        return Implies(eliminate_f_and_r(node.lhs), eliminate_f_and_r(node.rhs))
+
+    elif isinstance(node, Iff):
+        return Iff(eliminate_f_and_r(node.lhs), eliminate_f_and_r(node.rhs))
 
     elif isinstance(node, Modality):
-        return Modality(node.agents, transform_to_fundamental(node.sub))
+        return Modality(node.agents, eliminate_f_and_r(node.sub))
 
+    elif isinstance(node, DualModality):
+        return DualModality(node.agents, eliminate_f_and_r(node.sub))
+
+    return node 
+
+def push_negations_to_nnf(node: ParseNode) -> ParseNode:
+    if isinstance(node, Not):
+        sub = node.sub
+
+        if isinstance(sub, Not):
+            return push_negations_to_nnf(sub.sub)
+
+        if isinstance(sub, And):
+            return Or(
+                push_negations_to_nnf(Not(sub.lhs)),
+                push_negations_to_nnf(Not(sub.rhs))
+            )
+
+        if isinstance(sub, Or):
+            return And(
+                push_negations_to_nnf(Not(sub.lhs)),
+                push_negations_to_nnf(Not(sub.rhs))
+            )
+
+        if isinstance(sub, T):
+            return F()
+
+        if isinstance(sub, F):
+            return T()
+
+        return Not(push_negations_to_nnf(sub))
+
+    elif isinstance(node, And):
+        return And(push_negations_to_nnf(node.lhs), push_negations_to_nnf(node.rhs))
+
+    elif isinstance(node, Or):
+        return Or(push_negations_to_nnf(node.lhs), push_negations_to_nnf(node.rhs))
+
+    elif isinstance(node, Next):
+        return Next(push_negations_to_nnf(node.sub))
+
+    elif isinstance(node, Until):
+        return Until(push_negations_to_nnf(node.lhs), push_negations_to_nnf(node.rhs))
+
+    elif isinstance(node, Globally):
+        return Globally(push_negations_to_nnf(node.sub))
+
+    elif isinstance(node, Eventually):
+        return Eventually(push_negations_to_nnf(node.sub))
+
+    elif isinstance(node, Modality):
+        return Modality(node.agents, push_negations_to_nnf(node.sub))
+
+    elif isinstance(node, DualModality):
+        return DualModality(node.agents, push_negations_to_nnf(node.sub))
+
+    return node  
+
+def apply_modal_dualities(node: ParseNode) -> ParseNode:
+    if isinstance(node, Not):
+        inner = node.sub
+
+        # ¬<A> ...
+        if isinstance(inner, Modality):
+            sub = inner.sub
+            agents = inner.agents
+
+            # ¬⟨A⟩ X φ ⇒ [A] X ¬φ
+            if isinstance(sub, Next):
+                return DualModality(agents, Next(Not(apply_modal_dualities(sub.sub))))
+
+            # ¬⟨A⟩ G φ ⇒ [A] (⊤ U ¬φ)
+            elif isinstance(sub, Globally):
+                return DualModality(agents, Until(T(), Not(apply_modal_dualities(sub.sub))))
+
+            # ¬⟨A⟩ (⊤ U φ) ⇒ [A] G ¬φ
+            elif isinstance(sub, Until) and isinstance(sub.lhs, T):
+                return DualModality(agents, Globally(Not(apply_modal_dualities(sub.rhs))))
+
+            # ¬⟨A⟩ (φ U ψ) ⇒ [A] ¬(ψ U φ)
+            elif isinstance(sub, Until):
+                return DualModality(agents, Not(Until(apply_modal_dualities(sub.rhs), apply_modal_dualities(sub.lhs))))
+
+            # ¬⟨A⟩ ¬(φ U ψ) ⇒ [A] (φ U ψ)
+            elif isinstance(sub, Not) and isinstance(sub.sub, Until):
+                return DualModality(agents, Until(apply_modal_dualities(sub.sub.lhs), apply_modal_dualities(sub.sub.rhs)))
+
+        # ¬[A] ...
+        elif isinstance(inner, DualModality):
+            sub = inner.sub
+            agents = inner.agents
+
+            # ¬[A] X φ ⇒ ⟨A⟩ X ¬φ
+            if isinstance(sub, Next):
+                return Modality(agents, Next(Not(apply_modal_dualities(sub.sub))))
+
+            # ¬[A] G φ ⇒ ⟨A⟩ (⊤ U ¬φ)
+            elif isinstance(sub, Globally):
+                return Modality(agents, Until(T(), Not(apply_modal_dualities(sub.sub))))
+
+            # ¬[A] (⊤ U φ) ⇒ ⟨A⟩ G ¬φ
+            elif isinstance(sub, Until) and isinstance(sub.lhs, T):
+                return Modality(agents, Globally(Not(apply_modal_dualities(sub.rhs))))
+
+            # ¬[A] (φ U ψ) ⇒ ⟨A⟩ ¬(ψ U φ)
+            elif isinstance(sub, Until):
+                return Modality(agents, Not(Until(apply_modal_dualities(sub.rhs), apply_modal_dualities(sub.lhs))))
+
+            # ¬[A] ¬(φ U ψ) ⇒ ⟨A⟩ (φ U ψ)
+            elif isinstance(sub, Not) and isinstance(sub.sub, Until):
+                return Modality(agents, Until(apply_modal_dualities(sub.sub.lhs), apply_modal_dualities(sub.sub.rhs)))
+
+    # Recursión en hijos
+    elif isinstance(node, And):
+        return And(apply_modal_dualities(node.lhs), apply_modal_dualities(node.rhs))
+    elif isinstance(node, Or):
+        return Or(apply_modal_dualities(node.lhs), apply_modal_dualities(node.rhs))
+    elif isinstance(node, Not):
+        return Not(apply_modal_dualities(node.sub))
+    elif isinstance(node, Next):
+        return Next(apply_modal_dualities(node.sub))
+    elif isinstance(node, Until):
+        return Until(apply_modal_dualities(node.lhs), apply_modal_dualities(node.rhs))
+    elif isinstance(node, Globally):
+        return Globally(apply_modal_dualities(node.sub))
+    elif isinstance(node, Modality):
+        return Modality(node.agents, apply_modal_dualities(node.sub))
+    elif isinstance(node, DualModality):
+        return DualModality(node.agents, apply_modal_dualities(node.sub))
+    
     return node
 
-def filter(ast, strict_ATL=True):
+def normalize_formula(ast: ParseNode) -> ParseNode:
+    previous = None
+    current = ast
 
-    has_modality = False  
-    agents_set = None  
+    while previous != current:
+        previous = current
+        current = eliminate_f_and_r(current)
+        current = push_negations_to_nnf(current)
+
+    return current
+
+def filter(ast, strict_ATL=True):
+    has_modality = False
+    agents_set = None
 
     def check_invalid(node):
         nonlocal has_modality
 
-        if isinstance(node, Modality):
-            has_modality = True  
+        if isinstance(node, (Modality, DualModality)):
+            has_modality = True
 
             if not isinstance(node.sub, ParseNode) or not isinstance(node.agents, list):
-                print(" ERROR: Modality must have valid agents and subformula.")
+                print("ERROR: Modality must have valid agents and subformula.")
                 return "INVALID"
 
         if isinstance(node, Until):
@@ -596,30 +913,29 @@ def filter(ast, strict_ATL=True):
             if isinstance(child, ParseNode):
                 result = check_invalid(child)
                 if result:
-                    return result 
+                    return result
 
-        return None  
+        return None
 
     resultado = check_invalid(ast)
-
     if resultado:
-        return resultado  
+        return resultado
 
     if not strict_ATL:
-        return "ATL*" 
+        return "ATL*"
 
-    def check_strict_ATL(node, parent=None):
+    def check_strict_ATL(node, parent=None, grandparent=None):
         nonlocal has_modality, agents_set
 
-        if isinstance(node, Modality):
-            has_modality = True  
+        if isinstance(node, (Modality, DualModality)):
+            has_modality = True
 
             if agents_set is None:
-                agents_set = set(node.agents)  
+                agents_set = set(node.agents)
             else:
                 if set(node.agents) != agents_set:
                     print(f"ERROR: Modalities with different agents: {agents_set} vs {set(node.agents)}.")
-                    return "ATL* but not ATL"  
+                    return "ATL* but not ATL"
 
             if not isinstance(node.sub, (Next, Globally, Until, Not)):
                 print("ERROR: Modality can only be applied to Next, Globally or Until.")
@@ -627,31 +943,39 @@ def filter(ast, strict_ATL=True):
 
         if isinstance(node, Until):
             if getattr(node, "generated_from_eventually", False):
-                pass  
-            # else:
-            #    if not isinstance(node.rhs, (Var, Modality)):
-            #        print(" ERROR: φ₂ in Until must be modal or atomic.")
-            #        return "ATL* but not ATL"
+                pass
+            elif isinstance(parent, (Modality, DualModality)):
+                pass
+            elif isinstance(parent, Not) and isinstance(grandparent, (Modality, DualModality)):
+                pass
+            else:
+                print(f"ERROR: Until is not immediately preceded by a modality.")
+                return "ATL* but not ATL"
 
-        if isinstance(node, (Next, Globally, Until)):
-            if not isinstance(parent, Modality):  
-                print(f" ERROR: {node.__class__.__name__}  is not immediately preceded by a modality.")
+        if isinstance(node, (Next, Globally)):
+            if not isinstance(parent, (Modality, DualModality)):
+                print(f"ERROR: {node.__class__.__name__} is not immediately preceded by a modality.")
                 return "ATL* but not ATL"
 
         for key, child in node.__dict__.items():
             if isinstance(child, ParseNode):
-                result = check_strict_ATL(child, node)  
+                result = check_strict_ATL(child, node, parent)
                 if result:
-                    return result  
+                    return result
+            elif isinstance(child, list):
+                for sub in child:
+                    if isinstance(sub, ParseNode):
+                        result = check_strict_ATL(sub, node, parent)
+                        if result:
+                            return result
 
-        return None  
-
+        return None
 
     result_ATL = check_strict_ATL(ast)
     if result_ATL:
-        return result_ATL  
+        return result_ATL
 
-    return "ATL"  
+    return "ATL"
 
 def extract_propositions(node):
     propositions = set()
@@ -670,92 +994,178 @@ def extract_propositions(node):
 def generate_closure(ast):
     closure = set()
 
-    def is_subformula(node):
-        
-        if node == ast:
-            return True
+    def negate_and_push(node):
+        neg = Not(deepcopy(node))
+        return push_negations_to_nnf(neg)
 
-        if isinstance(node, Var):
-            return True
+    def add_with_negations(node):
+        closure.add(node)
+        closure.add(negate_and_push(node))
 
-        if isinstance(node, Modality):
-            return True
+    def traverse(node, parent=None):
+        if isinstance(node, Not) and isinstance(node.sub, (Modality, DualModality)):
+            inner = node.sub.sub
+            if isinstance(inner, (Next, Globally)):
+                add_with_negations(node)
+                traverse(inner.sub, inner)
+            elif isinstance(inner, Until):
+                add_with_negations(node)
+                traverse(inner.lhs, inner)
+                traverse(inner.rhs, inner)
+            return
 
-        if isinstance(node, (Next, Globally)):
-            return False
+        elif isinstance(node, (Modality, DualModality)):
+            add_with_negations(node)
+            traverse(node.sub, node)
+            return
 
-        if isinstance(node, Until) and not isinstance(node, Modality):
-            return False
+        elif isinstance(node, (And, Or)):
+            add_with_negations(node)
+            traverse(node.lhs, node)
+            traverse(node.rhs, node)
+            return
 
-        return True  
+        elif isinstance(node, Not):
+            if isinstance(node.sub, Var):
+                closure.add(node)
+                closure.add(node.sub)
+            else:
+                traverse(node.sub, node)
+            return
 
+        elif isinstance(node, Var):
+            if not isinstance(parent, Not):
+                closure.add(node)
+                closure.add(Not(deepcopy(node)))  
+            return
 
-    def traverse(node):
-        
-        if is_subformula(node):
-            closure.add(node)
+        elif isinstance(node, Until):
+            if isinstance(parent, (Modality, DualModality)):
+                traverse(node.lhs, node)
+                traverse(node.rhs, node)
+            return
 
-        for child in getattr(node, "__dict__", {}).values():
-            if isinstance(child, ParseNode):
-                traverse(child)
+        elif isinstance(node, (Next, Globally)):
+            if isinstance(parent, (Modality, DualModality)):
+                traverse(node.sub, node)
+            return
 
     traverse(ast)
     return closure
 
 def generate_transitions(acg):
-    
     for state in acg.states:
-        for sigma in acg.alphabet:  
-            
-            if isinstance(state, Var):  
+        for sigma in acg.alphabet:
+
+            #  p
+            if isinstance(state, Var):
                 if state.name in sigma:
-                    acg.add_transition(state, sigma, Top())  
+                    acg.add_transition(state, sigma, Top())
                 else:
-                    acg.add_transition(state, sigma, Bottom())  
+                    acg.add_transition(state, sigma, Bottom())
 
-            elif isinstance(state, Not) and isinstance(state.sub, Var):  
-                negated_prop = state.sub.name
-                if negated_prop in sigma:
-                    acg.add_transition(state, sigma, Bottom())  
+            # ¬p
+            elif isinstance(state, Not) and isinstance(state.sub, Var):
+                if state.sub.name in sigma:
+                    acg.add_transition(state, sigma, Bottom())
                 else:
-                    acg.add_transition(state, sigma, Top())  
+                    acg.add_transition(state, sigma, Top())
 
-            elif isinstance(state, And):  
-                acg.add_transition(state, sigma, Conj(EpsilonAtom(state.lhs), EpsilonAtom(state.rhs)))  
+            # AND
+            elif isinstance(state, And):
+                acg.add_transition(state, sigma, Conj(
+                    EpsilonAtom(state.lhs), EpsilonAtom(state.rhs)))
 
-            elif isinstance(state, Or):  
-                acg.add_transition(state, sigma, Disj(EpsilonAtom(state.lhs), EpsilonAtom(state.rhs)))  
+            # OR
+            elif isinstance(state, Or):
+                acg.add_transition(state, sigma, Disj(
+                    EpsilonAtom(state.lhs), EpsilonAtom(state.rhs)))
 
+            # ⟨A⟩ X φ
             elif isinstance(state, Modality) and isinstance(state.sub, Next):
-                next_state = state.sub.sub  
-                agents = frozenset(state.agents)  
-                acg.add_transition(state, sigma, ExistentialAtom(next_state, agents))  
+                next_state = state.sub.sub
+                agents = frozenset(state.agents)
+                acg.add_transition(state, sigma, ExistentialAtom(next_state, agents))
 
+            # ¬⟨A⟩ X φ 
+            elif isinstance(state, Not) and isinstance(state.sub, Modality) and isinstance(state.sub.sub, Next):
+                inner = state.sub.sub.sub
+                negated_inner = push_negations_to_nnf(Not(inner))
+                agents = frozenset(state.sub.agents)
+                acg.add_transition(state, sigma, UniversalAtom(negated_inner, agents))
+
+            # ⟨A⟩ G φ
             elif isinstance(state, Modality) and isinstance(state.sub, Globally):
-                phi = state.sub.sub  
-                agents = frozenset(state.agents)  
-                acg.add_transition(state, sigma, Conj(EpsilonAtom(phi), ExistentialAtom(state, agents)))
+                phi = state.sub.sub
+                agents = frozenset(state.agents)
+                acg.add_transition(state, sigma, Conj(
+                    EpsilonAtom(phi),
+                    ExistentialAtom(state, agents)
+                ))
 
+            # ¬⟨A⟩ G φ 
+            elif isinstance(state, Not) and isinstance(state.sub, Modality) and isinstance(state.sub.sub, Globally):
+                phi = state.sub.sub.sub
+                neg_phi = push_negations_to_nnf(Not(phi))
+                agents = frozenset(state.sub.agents)
+                acg.add_transition(state, sigma, Disj(
+                    EpsilonAtom(neg_phi),
+                    UniversalAtom(state, agents)
+                ))
+
+            # ⟨A⟩ (φ1 U φ2)
             elif isinstance(state, Modality) and isinstance(state.sub, Until):
-                phi1 = state.sub.lhs  
-                phi2 = state.sub.rhs  
-                agents = frozenset(state.agents)  
-                acg.add_transition(state, sigma, Disj(EpsilonAtom(phi2), Conj(EpsilonAtom(phi1), ExistentialAtom(state, agents))))
+                phi1 = state.sub.lhs
+                phi2 = state.sub.rhs
+                agents = frozenset(state.agents)
+                acg.add_transition(state, sigma, Disj(
+                    EpsilonAtom(phi2),
+                    Conj(
+                        EpsilonAtom(phi1),
+                        ExistentialAtom(state, agents)
+                    )
+                ))
+
+            # ¬⟨A⟩ (φ1 U φ2)
+            elif isinstance(state, Not) and isinstance(state.sub, Modality) and isinstance(state.sub.sub, Until):
+                phi1 = state.sub.sub.lhs
+                phi2 = state.sub.sub.rhs
+                neg_phi1 = push_negations_to_nnf(Not(phi1))
+                neg_phi2 = push_negations_to_nnf(Not(phi2))
+                agents = frozenset(state.sub.agents)
+                acg.add_transition(state, sigma, Conj(
+                    EpsilonAtom(neg_phi2),
+                    Disj(
+                        EpsilonAtom(neg_phi1),
+                        UniversalAtom(state, agents)
+                    )
+                ))
 
 def build_acg(transformed_ast):
-    
     ap_set = extract_propositions(transformed_ast)
-    alphabet = set(frozenset(s) for s in chain.from_iterable(combinations(ap_set, r) for r in range(len(ap_set) + 1)))
+    alphabet = set(frozenset(s)for s in chain.from_iterable(combinations(ap_set, r) for r in range(len(ap_set) + 1)))
     acg = ACG()
     acg.propositions = ap_set
-    acg.alphabet = alphabet 
+    acg.alphabet = alphabet
+
     closure = generate_closure(transformed_ast)
-    acg.states = closure  
-    acg.initial_state = transformed_ast  
+    acg.states = closure
+    acg.initial_state = transformed_ast
+
+    for node in closure:
+        if isinstance(node, Modality) and isinstance(node.sub, Globally):
+            acg.final_states.add(node)
+
+        elif isinstance(node, Not) and isinstance(node.sub, Modality) and isinstance(node.sub.sub, Until):
+            acg.final_states.add(node)
+
     generate_transitions(acg)
 
-    return acg  
+    return acg
 
+#===========
+# CGS
+#===========
 
 class CGS:
     def __init__(self):
@@ -800,6 +1210,31 @@ class CGS:
 
         ordered_joint_action = frozenset(sorted(joint_decision, key=lambda x: x[0]))
         self.transition_function[(state, ordered_joint_action)] = next_state
+
+    
+    def get_all_agent_choices(self, agent_subset):
+
+        agent_subset = sorted(agent_subset)
+        all_choices = [self.decisions[agent] for agent in agent_subset]
+        combinations = product(*all_choices)
+
+        return [
+            dict(zip(agent_subset, combo)) for combo in combinations
+        ]
+
+    def get_joint_actions_for_agents(self, agent_subset):
+
+        agent_subset = sorted(agent_subset)
+        all_choices = [self.decisions[agent] for agent in agent_subset]
+        combos = product(*all_choices)
+
+        return [dict(zip(agent_subset, combo)) for combo in combos]
+
+    def get_successor(self, state, joint_decision_dict):
+
+        joint_action = frozenset(sorted(joint_decision_dict.items()))
+        return self.transition_function.get((state, joint_action), None)
+
 
     def __str__(self):
         formatted_transitions = []
@@ -861,7 +1296,6 @@ class CounterStrategy:
         ]
         return f"CounterStrategy({self.agents}):\n" + "\n".join(formatted_decisions)
 
-
 def play(game, initial_state, strategy, counterstrategy, max_steps=10):
     history = [initial_state]
     current_state = initial_state
@@ -892,119 +1326,404 @@ def play(game, initial_state, strategy, counterstrategy, max_steps=10):
     return history
 
 
-
-game = CGS()
-
-game.add_proposition("safe")
-game.add_proposition("critical")
-game.add_proposition("operational")
-game.add_proposition("Explosion")
-game.add_proposition("shutdown")
-
-game.add_agent("Reactor")
-game.add_agent("Pressure")
-
-game.add_decisions("Reactor", {"heat", "cool", "emergency_shutdown"})
-game.add_decisions("Pressure", {"hold", "vent", "release_pressure"})
-
-game.add_state("Start")
-game.add_state("Stable")
-game.add_state("Cold")
-game.add_state("Critical")
-game.add_state("Shut Down")
-game.add_state("Emergency Shutdown")
-
-game.set_initial_state("Start")
-
-game.label_state("Start", {"safe"})
-game.label_state("Critical", {"critical"})
-game.label_state("Stable", {"safe", "operational"})
-game.label_state("Cold", {"safe"})
-game.label_state("Shut Down", {"Explosion"})
-game.label_state("Emergency Shutdown", {"shutdown"})
-
-game.add_transition("Start", {("Reactor", "heat"), ("Pressure", "hold")}, "Stable")
-game.add_transition("Start", {("Reactor", "heat"), ("Pressure", "vent")}, "Stable")
-game.add_transition("Start", {("Reactor", "cool"), ("Pressure", "hold")}, "Start")
-game.add_transition("Start", {("Reactor", "cool"), ("Pressure", "vent")}, "Start")
-
-game.add_transition("Stable", {("Reactor", "heat"), ("Pressure", "vent")}, "Stable")
-game.add_transition("Stable", {("Reactor", "cool"), ("Pressure", "hold")}, "Cold")
-game.add_transition("Stable", {("Reactor", "cool"), ("Pressure", "vent")}, "Cold")
-game.add_transition("Stable", {("Reactor", "heat"), ("Pressure", "hold")}, "Critical")
-game.add_transition("Stable", {("Reactor", "cool"), ("Pressure", "release_pressure")}, "Start")
-
-game.add_transition("Cold", {("Reactor", "heat"), ("Pressure", "hold")}, "Stable")
-game.add_transition("Cold", {("Reactor", "heat"), ("Pressure", "vent")}, "Stable")
-game.add_transition("Cold", {("Reactor", "cool"), ("Pressure", "hold")}, "Start")
-game.add_transition("Cold", {("Reactor", "cool"), ("Pressure", "vent")}, "Start")
-
-game.add_transition("Critical", {("Reactor", "cool"), ("Pressure", "hold")}, "Critical")
-game.add_transition("Critical", {("Reactor", "heat"), ("Pressure", "vent")}, "Stable")
-game.add_transition("Critical", {("Reactor", "cool"), ("Pressure", "vent")}, "Stable")
-game.add_transition("Critical", {("Reactor", "heat"), ("Pressure", "hold")}, "Shut Down")
-game.add_transition("Critical", {("Reactor", "emergency_shutdown"), ("Pressure", "release_pressure")}, "Emergency Shutdown")
-
-game.add_transition("Shut Down", {("Reactor", "heat"), ("Pressure", "hold")}, "Start")
-game.add_transition("Shut Down", {("Reactor", "heat"), ("Pressure", "vent")}, "Start")
-game.add_transition("Shut Down", {("Reactor", "cool"), ("Pressure", "vent")}, "Start")
-game.add_transition("Shut Down", {("Reactor", "cool"), ("Pressure", "hold")}, "Start")
-
-strategy_reactor = Strategy({"Reactor"})  
-strategy_reactor.add_decision(["Start"], {"Reactor": "heat"})
-strategy_reactor.add_decision(["Stable"], {"Reactor": "cool"})
-strategy_reactor.add_decision(["Critical"], {"Reactor": "cool"})
-strategy_reactor.add_decision(["Shut Down"], {"Reactor": "emergency_shutdown"})
-
-counterstrategy_pressure = CounterStrategy({"Pressure"})  
-counterstrategy_pressure.add_decision(["Start"], {"Reactor": "heat"}, {"Pressure": "hold"})
-counterstrategy_pressure.add_decision(["Stable"], {"Reactor": "cool"}, {"Pressure": "release_pressure"})
-counterstrategy_pressure.add_decision(["Critical"], {"Reactor": "cool"}, {"Pressure": "vent"})
-counterstrategy_pressure.add_decision(["Critical"], {"Reactor": "emergency_shutdown"}, {"Pressure": "release_pressure"})
-
-print("\n🔍 Simulating a Play from 'Start'...\n")
-play_trace = play(game, "Start", strategy_reactor, counterstrategy_pressure, max_steps=10)
-
-print("\nCGS Structure:\n", game)
-print("\n", strategy_reactor)
-print("\n", counterstrategy_pressure)
-print("\nResulting Play Trace:", " → ".join(play_trace))
+#===========
+# GAME
+#===========
 
 
-test_formulas = [
-        "<A> eventually (p or q)"
-    ]
+def evaluate_boolean_formula(formula, atom_set):
 
-for formula in test_formulas:
-    print("=" * 70)
-    print(f" Original Formula : {formula}")
+    if isinstance(formula, str):
+        return formula != "∅"  
 
-    tokens = tokenize(formula)
-    print(f" Tokens: {tokens}")
+    if isinstance(formula, Top):
+        return True
 
-    try:
-        ast = parse(tokens)
-        print(" Initial AST :")
-        print(ast.to_tree())
+    if isinstance(formula, Bottom):
+        return False
 
-        transformed_ast = transform_to_fundamental(ast)
-        print(" Transformed AST :")
-        print(transformed_ast.to_tree())
+    if isinstance(formula, Conj):
+        return (
+            evaluate_boolean_formula(formula.lhs, atom_set)
+            and evaluate_boolean_formula(formula.rhs, atom_set)
+        )
 
-        reconstructed_formula = transformed_ast.to_formula()
-        print(f" Reconstructed Formula : {reconstructed_formula}")
+    if isinstance(formula, Disj):
+        return (
+            evaluate_boolean_formula(formula.lhs, atom_set)
+            or evaluate_boolean_formula(formula.rhs, atom_set)
+        )
 
-        result = filter(transformed_ast, strict_ATL=True)
-        print(f" Filter result :  {result}")
+    for atom in atom_set:
+        if formula == atom:
+            return True
 
-        if result == "ATL":
-            acg = build_acg(transformed_ast)
-            print(acg)
+    return False
 
-        else:
-            print(" Formula is not ATL, unable to build ACG")
+def generate_possibilities(formula):
 
-    except ValueError as e:
-        print(f" Parsing error : {e}")
+    if isinstance(formula, (EpsilonAtom, UniversalAtom, ExistentialAtom)):
+        return [frozenset([formula])]
 
-    print("=" * 70, "\n")
+    elif isinstance(formula, Conj):
+        left = generate_possibilities(formula.lhs)
+        right = generate_possibilities(formula.rhs)
+        return [a.union(b) for a in left for b in right]
+
+    elif isinstance(formula, Disj):
+        left = generate_possibilities(formula.lhs)
+        right = generate_possibilities(formula.rhs)
+        return left + right
+
+    return []
+
+
+class GameProduct:
+    def __init__(self, acg: ACG, cgs: CGS):
+        self.acg = acg
+        self.cgs = cgs
+        self.states = set()
+        self.transitions = dict()
+        self.initial_states = set()
+        self.S1 = set()
+        self.S2 = set()
+        self.B = set()  
+
+    def __str__(self):
+        pretty_initial = [pretty_node(s) for s in sorted(self.initial_states, key=str)]
+        pretty_s1 = [pretty_node(s) for s in sorted(self.S1, key=str)]
+        pretty_s2 = [pretty_node(s) for s in sorted(self.S2, key=str)]
+        pretty_B = [pretty_node(s) for s in sorted(self.B, key=str)]
+
+        lines = [
+            "GameProduct(",
+            f"  Initial States: {pretty_initial}",
+            f"  Total States: {len(self.states)}",
+            f"  Player Accept States (S1): {pretty_s1}",
+            f"  Player Reject States (S2): {pretty_s2}",
+            f"  Büchi Final States (B): {pretty_B}",
+            ")"
+        ]
+        return "\n".join(lines)
+
+
+def generate_initial_game_states(product: GameProduct):
+    q0 = product.acg.initial_state
+    s0 = product.cgs.initial_state
+    initial = ("state", q0, s0)
+
+    product.initial_states.add(initial)
+    product.states.add(initial)
+    product.S1.add(initial)
+
+    return initial
+
+def expand_from_state_node(product: GameProduct, q, s):
+    sigma = frozenset(product.cgs.labeling_function[s])
+    delta_formula = product.acg.get_transition(q, sigma)
+
+    for U in generate_possibilities(delta_formula):
+        atom_selection_node = ("atom_selection", q, s, frozenset(U))
+
+        product.states.add(atom_selection_node)
+        product.transitions[(("state", q, s), atom_selection_node)] = None
+        product.S2.add(atom_selection_node)
+
+def expand_from_atom_selection_node(product: GameProduct, q, s, U):
+    for alpha in U:
+        if isinstance(alpha, (EpsilonAtom, UniversalAtom, ExistentialAtom)):
+            q_prime = alpha.state
+            new_node = ("atom_applied", q_prime, s, alpha)
+            
+            product.states.add(new_node)
+            product.transitions[(("atom_selection", q, s, U), new_node)] = None
+            product.S1.add(new_node)  
+
+def expand_from_atom_applied_node(product: GameProduct, q, s, alpha):
+    if isinstance(alpha, EpsilonAtom):
+        q_prime = alpha.state
+        s_prime = s
+        new_state = ("state", q_prime, s_prime)
+        product.states.add(new_state)
+        product.transitions[(("atom_applied", q, s, alpha), new_state)] = None
+        product.S1.add(new_state)
+
+    elif isinstance(alpha, UniversalAtom):
+        for d in product.cgs.get_all_agent_choices(alpha.agents):
+            reject_univ_node = (
+                "reject_univ",
+                q,
+                s,
+                alpha.agents,
+                alpha,
+                frozenset(d.items())
+            )
+            product.states.add(reject_univ_node)
+            product.transitions[(("atom_applied", q, s, alpha), reject_univ_node)] = None
+            product.S2.add(reject_univ_node)
+
+    elif isinstance(alpha, ExistentialAtom):
+        A_prime = alpha.agents
+        A = product.cgs.agents
+        A_minus_A_prime = A - A_prime
+
+        for v_reject in product.cgs.get_all_agent_choices(A_minus_A_prime):
+            accept_exist_node = (
+                "accept_exist",
+                q,
+                s,
+                A_prime,
+                alpha,
+                frozenset(v_reject.items())
+            )
+            product.states.add(accept_exist_node)
+            product.transitions[(("atom_applied", q, s, alpha), accept_exist_node)] = None
+            product.S1.add(accept_exist_node)
+
+def expand_from_reject_univ_node(product: GameProduct, q, s, A, alpha, dA_frozen):
+    dA = dict(dA_frozen)
+    remaining_agents = product.cgs.agents - A
+
+    for d_reject in product.cgs.get_all_agent_choices(remaining_agents):
+        full_decision = {**dA, **d_reject}
+        successor = product.cgs.get_successor(s, full_decision)
+
+        if successor is not None:
+            q_prime = alpha.state
+            new_node = ("state", q_prime, successor)
+
+            product.states.add(new_node)
+            product.transitions[(("reject_univ", q, s, A, alpha, dA_frozen), new_node)] = None
+            product.S1.add(new_node)
+
+def expand_from_accept_exist_node(product: GameProduct, q, s, agents_prime, alpha, v_reject):
+
+    q_prime = alpha.state
+    A_prime = agents_prime
+    A = product.cgs.agents
+    A_minus_A_prime = A - A_prime
+
+    v_reject_dict = dict(v_reject)
+    if set(v_reject_dict.keys()) != A_minus_A_prime:
+        raise ValueError(f"Reject's decision should cover exactly A \\ A', got {v_reject_dict.keys()}")
+
+    for v_accept in product.cgs.get_joint_actions_for_agents(A_prime):
+        full_joint_action = {**v_reject_dict, **v_accept}
+
+        s_prime = product.cgs.get_successor(s, full_joint_action)
+
+        if s_prime is not None:
+            new_state = ("state", q_prime, s_prime)
+            product.states.add(new_state)
+            product.transitions[(("accept_exist", q, s, A_prime, alpha, v_reject), new_state)] = None
+            product.S1.add(new_state)
+
+def compute_buchi_states(product: GameProduct) -> set:
+    return {
+        ("state", q, s)
+        for q in product.acg.final_states
+        for s in product.cgs.states
+        
+    }
+
+def pretty_node(node):
+    if node[0] == "state":
+        _, q, s = node
+        return f"('state', {q.to_formula()}, {s})"
+
+    elif node[0] == "atom_selection":
+        _, q, s, U = node
+        atoms_str = ", ".join(str(a) for a in sorted(U, key=str))
+        return f"('atom_selection', {q.to_formula()}, {s}, {{{atoms_str}}})"
+
+    elif node[0] == "atom_applied":
+        _, q, s, alpha = node
+        return f"('atom_applied', {q.to_formula()}, {s}, {str(alpha)})"
+
+    elif node[0] == "reject_univ":
+        _, q, s, A, alpha, d = node
+        d_str = ", ".join(f"{k}: {v}" for k, v in dict(d).items())
+        return f"('reject_univ', {q.to_formula()}, {s}, {A}, {str(alpha)}, {{{d_str}}})"
+
+    elif node[0] == "accept_exist":
+        _, q, s, A_prime, alpha, v_reject = node
+        A_str = "{" + ", ".join(A_prime) + "}"
+        v_reject_str = ", ".join(f"{k}: {v}" for k, v in dict(v_reject).items())
+        return f"('accept_exist', {q.to_formula()}, {s}, {A_str}, {str(alpha)}, {{{v_reject_str}}})"
+
+    return str(node)
+
+def expand_node(product, node):
+    kind = node[0]
+    q, s = None, None
+
+    if kind == "state":
+        _, q, s = node
+        expand_from_state_node(product, q, s)
+        return [dst for (src, dst) in product.transitions if src == node]
+
+    elif kind == "atom_selection":
+        _, q, s, U = node
+        expand_from_atom_selection_node(product, q, s, U)
+        return [dst for (src, dst) in product.transitions if src == node]
+
+    elif kind == "atom_applied":
+        _, q, s, alpha = node
+        expand_from_atom_applied_node(product, q, s, alpha)
+        return [dst for (src, dst) in product.transitions if src == node]
+
+    elif kind == "reject_univ":
+        _, q, s, A, alpha, dA = node
+        expand_from_reject_univ_node(product, q, s, A, alpha, dA)
+        return [dst for (src, dst) in product.transitions if src == node]
+
+    elif kind == "accept_exist":
+        _, q, s, A_prime, alpha, v_reject = node
+        expand_from_accept_exist_node(product, q, s, A_prime, alpha, v_reject)
+        return [dst for (src, dst) in product.transitions if src == node]
+
+    return []
+
+def build_game(acg, cgs):
+    product = GameProduct(acg, cgs)
+
+    initial = generate_initial_game_states(product)
+    worklist = [initial]
+    visited = set()
+
+    while worklist:
+        node = worklist.pop()
+        if node in visited:
+            continue
+        visited.add(node)
+
+        new_nodes = expand_node(product, node)
+        worklist.extend(new_nodes)
+
+    product.B = compute_buchi_states(product)
+
+    return product.states, product.transitions, product.S1, product.S2, product.B, initial
+
+
+
+cgs = CGS()
+
+cgs.add_proposition("safe")
+cgs.add_proposition("critical")
+cgs.add_proposition("operational")
+cgs.add_proposition("shutdown")
+
+cgs.add_agent("Reactor")
+cgs.add_agent("Pressure")
+
+cgs.add_decisions("Reactor", {"heat", "cool"})
+cgs.add_decisions("Pressure", {"hold", "vent"})
+
+cgs.add_state("Start")
+cgs.add_state("Stable")
+cgs.add_state("Cold")
+cgs.add_state("Critical")
+cgs.add_state("Shut Down")
+
+cgs.set_initial_state("Start")
+
+cgs.label_state("Start", {"safe"})
+cgs.label_state("Critical", {"critical"})
+cgs.label_state("Stable", {"safe", "operational"})
+cgs.label_state("Cold", {"safe"})
+cgs.label_state("Shut Down", {"shutdown"})
+
+
+cgs.add_transition("Start", {("Reactor", "heat"), ("Pressure", "hold")}, "Stable")
+cgs.add_transition("Start", {("Reactor", "heat"), ("Pressure", "vent")}, "Stable")
+cgs.add_transition("Start", {("Reactor", "cool"), ("Pressure", "hold")}, "Start")
+cgs.add_transition("Start", {("Reactor", "cool"), ("Pressure", "vent")}, "Start")
+
+cgs.add_transition("Stable", {("Reactor", "heat"), ("Pressure", "vent")}, "Stable")
+cgs.add_transition("Stable", {("Reactor", "cool"), ("Pressure", "hold")}, "Cold")
+cgs.add_transition("Stable", {("Reactor", "cool"), ("Pressure", "vent")}, "Cold")
+cgs.add_transition("Stable", {("Reactor", "heat"), ("Pressure", "hold")}, "Critical")
+
+cgs.add_transition("Cold", {("Reactor", "heat"), ("Pressure", "hold")}, "Stable")
+cgs.add_transition("Cold", {("Reactor", "heat"), ("Pressure", "vent")}, "Stable")
+cgs.add_transition("Cold", {("Reactor", "cool"), ("Pressure", "hold")}, "Start")
+cgs.add_transition("Cold", {("Reactor", "cool"), ("Pressure", "vent")}, "Start")
+
+cgs.add_transition("Critical", {("Reactor", "cool"), ("Pressure", "hold")}, "Critical")
+cgs.add_transition("Critical", {("Reactor", "heat"), ("Pressure", "vent")}, "Stable")
+cgs.add_transition("Critical", {("Reactor", "cool"), ("Pressure", "vent")}, "Stable")
+cgs.add_transition("Critical", {("Reactor", "heat"), ("Pressure", "hold")}, "Shut Down")
+
+cgs.add_transition("Shut Down", {("Reactor", "heat"), ("Pressure", "hold")}, "Start")
+cgs.add_transition("Shut Down", {("Reactor", "heat"), ("Pressure", "vent")}, "Start")
+cgs.add_transition("Shut Down", {("Reactor", "cool"), ("Pressure", "vent")}, "Start")
+cgs.add_transition("Shut Down", {("Reactor", "cool"), ("Pressure", "hold")}, "Start")
+
+
+# ================================================================
+# MAIN
+# ================================================================
+
+test_formula = " <Reactor> safe until not cold"
+
+print("=" * 80)
+print(f"🔹 Formula Input : {test_formula}")
+
+try:
+    tokens = tokenize(test_formula)
+    print(f"\n📎 Tokens: {tokens}")
+
+    ast = parse(tokens)
+    print("\n Initial AST:")
+    print(ast.to_tree())
+
+    normalized_ast = normalize_formula(ast)
+    print("\n Normalized AST:")
+    print(normalized_ast.to_tree())
+
+    normalized_formula = normalized_ast.to_formula()
+    print(f"\n Normalized Formula: {normalized_formula}")
+
+    classification = filter(normalized_ast)
+    print(f"\n Classification: {classification}")
+
+    acg = build_acg(normalized_ast)
+
+    print("\n ACG Summary:")
+    print(acg)
+
+    S, E, S1, S2, B ,s0= build_game(acg, cgs)
+
+    print("\n Game Construction Summary:")
+    print(f"🔹 Total States: {len(S)}")
+    print(f"🔹 Transitions: {len(E)}")
+    print(f"🔹 Player Accept States (S1): {len(S1)}")
+    print(f"🔹 Player Reject States (S2): {len(S2)}")
+    print(f"🔹 Büchi Final States (B): {len(B)}")
+
+
+except ValueError as e:
+    print(f"\n Parsing error: {e}")
+
+
+print("\n Detailed GameProduct States:")
+for state in sorted(S, key=str):
+    owner = (
+        "Accept (S1)" if state in S1 else
+        "Reject (S2)" if state in S2 else
+        "Unknown (?)"
+    )
+    print(f"  - {pretty_node(state)}  →  Owner: {owner}")
+
+print("\n Transitions:")
+for (src, dst), _ in E.items():
+    print(f"  {pretty_node(src)}  →  {pretty_node(dst)}")
+
+print("\n Initial state :\n")
+print(f"{pretty_node(s0)}")
+
+print("\n Büchi Final States (B):")
+for b_state in sorted(B, key=str):
+    print(f"  - {pretty_node(b_state)}")
+
+print("\n Done.")
