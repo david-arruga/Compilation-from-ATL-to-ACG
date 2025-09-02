@@ -1,5 +1,4 @@
-# filepath: preprocessing/transform.py
-"""Transformaciones: dualidades, eliminación de F/R, empuje de negaciones y normalización."""
+
 from __future__ import annotations
 
 from .ast_nodes import (
@@ -111,7 +110,6 @@ def push_negations_to_nnf(node: ParseNode) -> ParseNode:
         return Eventually(push_negations_to_nnf(node.sub))
     elif isinstance(node, Modality):
         return Modality(node.agents, push_negations_to_nnf(node.sub))
-    # Si alguna vez quieres transformar DualModality en NNF, descomenta y define las reglas.
     return node
 
 

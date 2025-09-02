@@ -1,5 +1,4 @@
-# filepath: preprocessing/ast_nodes.py
-"""Nodos del AST y utilidades de representación (sin ACG aquí)."""
+
 from __future__ import annotations
 
 

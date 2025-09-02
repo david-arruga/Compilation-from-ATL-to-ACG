@@ -1,7 +1,4 @@
-"""
-Token constants and symbol map for the ATL/ATL* lexer.
-Solo datos; sin imports pesados.
-"""
+
 from __future__ import annotations
 
 LPAREN, RPAREN = 1, 2

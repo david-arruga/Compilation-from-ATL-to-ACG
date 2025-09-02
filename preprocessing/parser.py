@@ -1,5 +1,4 @@
-# filepath: preprocessing/parser.py
-"""Lexer (tokenize) y parser (parse) a AST."""
+
 from __future__ import annotations
 
 from .tokens import (

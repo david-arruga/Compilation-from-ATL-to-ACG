@@ -1,5 +1,4 @@
-# filepath: preprocessing/validator.py
-"""Validador: comprueba estructura y semántica (ATL vs ATL*)."""
+
 from __future__ import annotations
 
 from .ast_nodes import (
@@ -34,7 +33,7 @@ def filter(ast: ParseNode, strict_ATL: bool = True) -> str:
         if isinstance(node, (Modality, DualModality)):
             sub = node.sub
             if isinstance(sub, Not):
-                sub = sub.sub  # allow Not(◯φ), Not(□φ), etc.
+                sub = sub.sub  
             if not isinstance(sub, (Next, Globally, Until)):
                 print("ERROR: Modality must be applied to Next, Globally, or Until (or their negation).")
                 return "ATL* but not ATL"
@@ -68,7 +67,6 @@ def filter(ast: ParseNode, strict_ATL: bool = True) -> str:
                             return result
         return None
 
-    # Fase 1: validación de estructura general (tipos, campos)
     structure_result = validate_structure(ast)
     if structure_result:
         return structure_result
@@ -76,7 +74,6 @@ def filter(ast: ParseNode, strict_ATL: bool = True) -> str:
     if not strict_ATL:
         return "ATL*"
 
-    # Fase 2: semántica ATL estricta
     semantic_result = validate_atl_semantics(ast)
     if semantic_result:
         return semantic_result
