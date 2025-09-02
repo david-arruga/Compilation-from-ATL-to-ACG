@@ -1,0 +1,43 @@
+"""
+Token constants and symbol map for the ATL/ATL* lexer.
+Solo datos; sin imports pesados.
+"""
+from __future__ import annotations
+
+LPAREN, RPAREN = 1, 2
+LBRACE, RBRACE = 3, 4
+LTRI, RTRI = 5, 6
+COMMA = 7
+AND, OR, NOT = 8, 9, 10
+IMPLIES, IFF = 11, 12
+NEXT, UNTIL, RELEASE = 13, 14, 15
+GLOBALLY, EVENTUALLY = 16, 17
+PROPOSITION, AGENT_NAME = 18, 19
+NAME, UNKNOWN, END_OF_INPUT = 20, 21, 22
+LBRACKET, RBRACKET = 23, 24
+
+SYMBOL_MAP = {
+    "◯": NEXT,
+    "□": GLOBALLY,
+    "◇": EVENTUALLY,
+    "U": UNTIL,
+    "R": RELEASE,
+    "G": GLOBALLY,
+    "F": EVENTUALLY,
+    "X": NEXT,
+}
+
+__all__ = [
+    "LPAREN", "RPAREN",
+    "LBRACE", "RBRACE",
+    "LTRI", "RTRI",
+    "COMMA",
+    "AND", "OR", "NOT",
+    "IMPLIES", "IFF",
+    "NEXT", "UNTIL", "RELEASE",
+    "GLOBALLY", "EVENTUALLY",
+    "PROPOSITION", "AGENT_NAME",
+    "NAME", "UNKNOWN", "END_OF_INPUT",
+    "LBRACKET", "RBRACKET",
+    "SYMBOL_MAP",
+]
