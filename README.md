@@ -14,11 +14,9 @@ including four example Concurrent Game Structures (CGS) and two benchmarking sui
 
 ## 1. Scientific Overview
 
-Given an ATL/ATL\* formula φ and a Concurrent Game Structure G, this project builds a
-*compact ACG* (automaton over CGS‑game formulas) whose transitions encode symbolic
-obligations (ε, □, ◇ atoms), forms the product Acceptance Game A = ACG × G,
-then solves a Büchi objective over A to determine whether the initial product state belongs to
-Player 0’s winning region. If so, φ is satisfiable on G.
+Given an ATL formula φ and a Concurrent Game Structure (CGS) C, this project builds an
+*automaton over CGS* (ACG), forms the product Acceptance Game G = ACG × C,
+then solves the (Büchi) game over A to determine whether φ is satisfiable on C.
 
 Mathematical components reflected in the code:
 

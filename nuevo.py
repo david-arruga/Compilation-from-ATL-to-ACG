@@ -70,10 +70,6 @@ SYMBOL_MAP = {
     "X": NEXT
 }
 
-#===========
-# ACG
-#===========
-
 class ParseNode:
     def __str__(self):
         return self.to_formula()
@@ -1028,6 +1024,87 @@ def _delta_atomic(state, sigma):
         return Bottom() if state.sub.name in sigma else Top()
     raise TypeError("delta_atomic solo para estados atómicos p o ¬p")
 
+def extract_propositions(node):
+    propositions = set()
+
+    def traverse(n):
+        if isinstance(n, Var):
+            propositions.add(n.name) 
+        
+        for child in getattr(n, "__dict__", {}).values():
+            if isinstance(child, ParseNode):
+                traverse(child)
+
+    traverse(node)
+    return propositions 
+
+def generate_closure(ast):
+    closure = set()
+
+    def negate_and_push(node):
+        neg = Not(deepcopy(node))
+        return push_negations_to_nnf(neg)
+
+    def add_with_negations(node):
+        closure.add(node)
+        closure.add(negate_and_push(node))
+
+    def traverse(node, parent=None):
+        if isinstance(node, Not) and isinstance(node.sub, (Modality, DualModality)):
+            inner = node.sub.sub
+            if isinstance(inner, (Next, Globally)):
+                add_with_negations(node)
+                traverse(inner.sub, inner)
+            elif isinstance(inner, Until):
+                add_with_negations(node)
+                traverse(inner.lhs, inner)
+                traverse(inner.rhs, inner)
+            return
+
+        elif isinstance(node, (Modality, DualModality)):
+            add_with_negations(node)
+            traverse(node.sub, node)
+            return
+
+        elif isinstance(node, (And, Or)):
+            add_with_negations(node)
+            traverse(node.lhs, node)
+            traverse(node.rhs, node)
+            return
+
+        elif isinstance(node, Not):
+            if isinstance(node.sub, Var):
+                closure.add(node)
+                closure.add(node.sub)
+            else:
+                traverse(node.sub, node)
+            return
+
+        elif isinstance(node, Var):
+            if not isinstance(parent, Not):
+                closure.add(node)
+                closure.add(Not(deepcopy(node)))  
+            return
+
+        elif isinstance(node, Until):
+            if isinstance(parent, (Modality, DualModality)):
+                traverse(node.lhs, node)
+                traverse(node.rhs, node)
+            return
+
+        elif isinstance(node, (Next, Globally)):
+            if isinstance(parent, (Modality, DualModality)):
+                traverse(node.sub, node)
+            return
+        
+        elif isinstance(node, (T, F)):  
+            add_with_negations(node)
+            return
+
+
+    traverse(ast)
+    return closure
+
 def generate_transitions_final(acg, cgs):
     WILDCARD = acg.WILDCARD  # = None
 
@@ -1153,346 +1230,12 @@ def build_acg_final(transformed_ast, cgs, materialize_alphabet: bool = False):
 
     return acg
 
-
-def extract_propositions(node):
-    propositions = set()
-
-    def traverse(n):
-        if isinstance(n, Var):
-            propositions.add(n.name) 
-        
-        for child in getattr(n, "__dict__", {}).values():
-            if isinstance(child, ParseNode):
-                traverse(child)
-
-    traverse(node)
-    return propositions 
-
-def generate_closure(ast):
-    closure = set()
-
-    def negate_and_push(node):
-        neg = Not(deepcopy(node))
-        return push_negations_to_nnf(neg)
-
-    def add_with_negations(node):
-        closure.add(node)
-        closure.add(negate_and_push(node))
-
-    def traverse(node, parent=None):
-        if isinstance(node, Not) and isinstance(node.sub, (Modality, DualModality)):
-            inner = node.sub.sub
-            if isinstance(inner, (Next, Globally)):
-                add_with_negations(node)
-                traverse(inner.sub, inner)
-            elif isinstance(inner, Until):
-                add_with_negations(node)
-                traverse(inner.lhs, inner)
-                traverse(inner.rhs, inner)
-            return
-
-        elif isinstance(node, (Modality, DualModality)):
-            add_with_negations(node)
-            traverse(node.sub, node)
-            return
-
-        elif isinstance(node, (And, Or)):
-            add_with_negations(node)
-            traverse(node.lhs, node)
-            traverse(node.rhs, node)
-            return
-
-        elif isinstance(node, Not):
-            if isinstance(node.sub, Var):
-                closure.add(node)
-                closure.add(node.sub)
-            else:
-                traverse(node.sub, node)
-            return
-
-        elif isinstance(node, Var):
-            if not isinstance(parent, Not):
-                closure.add(node)
-                closure.add(Not(deepcopy(node)))  
-            return
-
-        elif isinstance(node, Until):
-            if isinstance(parent, (Modality, DualModality)):
-                traverse(node.lhs, node)
-                traverse(node.rhs, node)
-            return
-
-        elif isinstance(node, (Next, Globally)):
-            if isinstance(parent, (Modality, DualModality)):
-                traverse(node.sub, node)
-            return
-        
-        elif isinstance(node, (T, F)):  
-            add_with_negations(node)
-            return
-
-
-    traverse(ast)
-    return closure
-
-def generate_transitions(acg):
-    for state in acg.states:
-        for sigma in acg.alphabet:
-
-            # T T
-            if isinstance(state, T):
-                acg.add_transition(state, sigma, Top())
-
-            # F ⊥
-            elif isinstance(state, F):
-                acg.add_transition(state, sigma, Bottom())
-
-            #  p
-            if isinstance(state, Var):
-                if state.name in sigma:
-                    acg.add_transition(state, sigma, Top())
-                else:
-                    acg.add_transition(state, sigma, Bottom())
-
-            # ¬p
-            elif isinstance(state, Not) and isinstance(state.sub, Var):
-                if state.sub.name in sigma:
-                    acg.add_transition(state, sigma, Bottom())
-                else:
-                    acg.add_transition(state, sigma, Top())
-
-            # AND
-            elif isinstance(state, And):
-                acg.add_transition(state, sigma, Conj(
-                    EpsilonAtom(state.lhs), EpsilonAtom(state.rhs)))
-
-            # OR
-            elif isinstance(state, Or):
-                acg.add_transition(state, sigma, Disj(
-                    EpsilonAtom(state.lhs), EpsilonAtom(state.rhs)))
-
-            # ⟨A⟩ X φ
-            elif isinstance(state, Modality) and isinstance(state.sub, Next):
-                next_state = state.sub.sub
-                agents = frozenset(state.agents)
-                acg.add_transition(state, sigma, ExistentialAtom(next_state, agents))
-
-            # ¬⟨A⟩ X φ 
-            elif isinstance(state, Not) and isinstance(state.sub, Modality) and isinstance(state.sub.sub, Next):
-                inner = state.sub.sub.sub
-                negated_inner = push_negations_to_nnf(Not(inner))
-                agents = frozenset(state.sub.agents)
-                acg.add_transition(state, sigma, UniversalAtom(negated_inner, agents))
-
-            # ⟨A⟩ G φ
-            elif isinstance(state, Modality) and isinstance(state.sub, Globally):
-                phi = state.sub.sub
-                agents = frozenset(state.agents)
-                acg.add_transition(state, sigma, Conj(
-                    EpsilonAtom(phi),
-                    ExistentialAtom(state, agents)
-                ))
-
-            # ¬⟨A⟩ G φ 
-            elif isinstance(state, Not) and isinstance(state.sub, Modality) and isinstance(state.sub.sub, Globally):
-                phi = state.sub.sub.sub
-                neg_phi = push_negations_to_nnf(Not(phi))
-                agents = frozenset(state.sub.agents)
-                acg.add_transition(state, sigma, Disj(
-                    EpsilonAtom(neg_phi),
-                    UniversalAtom(state, agents)
-                ))
-
-            # ⟨A⟩ (φ1 U φ2)
-            elif isinstance(state, Modality) and isinstance(state.sub, Until):
-                phi1 = state.sub.lhs
-                phi2 = state.sub.rhs
-                agents = frozenset(state.agents)
-                acg.add_transition(state, sigma, Disj(
-                    EpsilonAtom(phi2),
-                    Conj(
-                        EpsilonAtom(phi1),
-                        ExistentialAtom(state, agents)
-                    )
-                ))
-
-            # ¬⟨A⟩ (φ1 U φ2)
-            elif isinstance(state, Not) and isinstance(state.sub, Modality) and isinstance(state.sub.sub, Until):
-                phi1 = state.sub.sub.lhs
-                phi2 = state.sub.sub.rhs
-                neg_phi1 = push_negations_to_nnf(Not(phi1))
-                neg_phi2 = push_negations_to_nnf(Not(phi2))
-                agents = frozenset(state.sub.agents)
-                acg.add_transition(state, sigma, Conj(
-                    EpsilonAtom(neg_phi2),
-                    Disj(
-                        EpsilonAtom(neg_phi1),
-                        UniversalAtom(state, agents)
-                    )
-                ))
-
-def generate_transitions2(acg,cgs):
-
-    WILDCARD = None           
-
-    for state in acg.states:
-
-        if isinstance(state, Var):
-            for sigma in acg.alphabet:
-                target = Top() if state.name in sigma else Bottom()
-                acg.add_transition(state, sigma, target)
-            continue
-
-        if isinstance(state, Not) and isinstance(state.sub, Var):
-            for sigma in acg.alphabet:
-                target = Bottom() if state.sub.name in sigma else Top()
-                acg.add_transition(state, sigma, target)
-            continue
-
-        sigma = WILDCARD
-
-        if isinstance(state, T):
-            acg.add_transition(state, sigma, Top())
-
-        elif isinstance(state, F):
-            acg.add_transition(state, sigma, Bottom())
-
-        elif isinstance(state, And):
-            acg.add_transition(
-                state, sigma,
-                Conj(EpsilonAtom(state.lhs), EpsilonAtom(state.rhs))
-            )
-
-        elif isinstance(state, Or):
-            acg.add_transition(
-                state, sigma,
-                Disj(EpsilonAtom(state.lhs), EpsilonAtom(state.rhs))
-            )
-
-        # ⟨A⟩ X φ
-        elif isinstance(state, Modality) and isinstance(state.sub, Next):
-            next_state = state.sub.sub
-            agents = frozenset(state.agents)
-            acg.add_transition(
-                state, sigma,
-                UniversalAtom(next_state, agents)
-            )
-
-        # ¬⟨A⟩ X φ
-        elif isinstance(state, Not) and isinstance(state.sub, Modality) \
-             and isinstance(state.sub.sub, Next):
-            inner = state.sub.sub.sub
-            neg_inner = push_negations_to_nnf(Not(inner))
-            agents = frozenset(state.sub.agents)
-            Omega=cgs.agents
-            Agentsbuenos =Omega-agents
-            acg.add_transition(
-                state, sigma,
-                ExistentialAtom(neg_inner, Agentsbuenos)
-            )
-
-        # ⟨A⟩ G φ
-        elif isinstance(state, Modality) and isinstance(state.sub, Globally):
-            phi = state.sub.sub
-            agents = frozenset(state.agents)
-            acg.add_transition(
-                state, sigma,
-                Conj(EpsilonAtom(phi), UniversalAtom(state, agents))
-            )
-
-        # ¬⟨A⟩ G φ
-        elif isinstance(state, Not) and isinstance(state.sub, Modality) \
-             and isinstance(state.sub.sub, Globally):
-            phi = state.sub.sub.sub
-            neg_phi = push_negations_to_nnf(Not(phi))
-            agents = frozenset(state.sub.agents)
-            Omega=cgs.agents
-            Agentsbuenos =Omega-agents
-            acg.add_transition(
-                state, sigma,
-                Disj(EpsilonAtom(neg_phi), ExistentialAtom(state, Agentsbuenos))
-            )
-
-        # ⟨A⟩ (φ1 U φ2)
-        elif isinstance(state, Modality) and isinstance(state.sub, Until):
-            phi1, phi2 = state.sub.lhs, state.sub.rhs
-            agents = frozenset(state.agents)
-            acg.add_transition(
-                state, sigma,
-                Disj(
-                    EpsilonAtom(phi2),
-                    Conj(EpsilonAtom(phi1), UniversalAtom(state, agents))
-                )
-            )
-
-        # ¬⟨A⟩ (φ1 U φ2)
-        elif isinstance(state, Not) and isinstance(state.sub, Modality) \
-             and isinstance(state.sub.sub, Until):
-            phi1, phi2 = state.sub.sub.lhs, state.sub.sub.rhs
-            neg_phi1 = push_negations_to_nnf(Not(phi1))
-            neg_phi2 = push_negations_to_nnf(Not(phi2))
-            agents = frozenset(state.sub.agents)
-            Omega=cgs.agents
-            Agentsbuenos =Omega-agents
-            acg.add_transition(
-                state, sigma,
-                Conj(
-                    EpsilonAtom(neg_phi2),
-                    Disj(
-                        EpsilonAtom(neg_phi1),
-                        ExistentialAtom(state, Agentsbuenos)
-                    )
-                )
-            )
-
-
-
-
-def build_acg(transformed_ast):
-    ap_set = extract_propositions(transformed_ast)
-    alphabet = set(frozenset(s)for s in chain.from_iterable(combinations(ap_set, r) for r in range(len(ap_set) + 1)))
-    acg = ACG()
-    acg.propositions = ap_set
-    acg.alphabet = alphabet
-
-    closure = generate_closure(transformed_ast)
-    acg.states = closure
-    acg.initial_state = transformed_ast
-
-    for node in closure:
-        if isinstance(node, Modality) and isinstance(node.sub, Globally):
-            acg.final_states.add(node)
-
-        elif isinstance(node, Not) and isinstance(node.sub, Modality) and isinstance(node.sub.sub, Until):
-            acg.final_states.add(node)
-
-    generate_transitions(acg)
-
-    return acg
-
-def build_acg2(transformed_ast,cgs):
-    ap_set = extract_propositions(transformed_ast)
-    alphabet = set(frozenset(s)for s in chain.from_iterable(combinations(ap_set, r) for r in range(len(ap_set) + 1)))
-    acg = ACG()
-    acg.propositions = ap_set
-    acg.alphabet = alphabet
-
-    closure = generate_closure(transformed_ast)
-    acg.states = closure
-    acg.initial_state = transformed_ast
-
-    for node in closure:
-        if isinstance(node, Modality) and isinstance(node.sub, Globally):
-            acg.final_states.add(node)
-
-        elif isinstance(node, Not) and isinstance(node.sub, Modality) and isinstance(node.sub.sub, Until):
-            acg.final_states.add(node)
-
-    generate_transitions2(acg,cgs)
-
-    return acg
-
-
+def build_acg_with_timer_final(ast,cgs):
+    start = time.perf_counter()
+    acg = build_acg_final(ast,cgs)
+    elapsed = time.perf_counter() - start
+    size = compute_acg_size(acg)
+    return acg, size, elapsed
 
 def atom_counter(formula):
     atoms = set()
@@ -1527,6 +1270,7 @@ def compute_acg_size(acg):
         atom_set.update(atoms)
 
     return state_count + len(atom_set)
+
 
 
 #========================================
@@ -2163,6 +1907,65 @@ def solve_buchi_game(S, E, S1, S2, B):
 
 
 
+cgs5 = CGS()
+
+cgs5.add_proposition("safe")
+cgs5.add_proposition("start")
+cgs5.add_proposition("operational")
+cgs5.add_proposition("efficient")
+cgs5.add_proposition("underpowered")
+cgs5.add_proposition("danger")
+cgs5.add_proposition("emergency")
+
+cgs5.add_agent("Reactor")
+cgs5.add_agent("Valve")
+
+cgs5.add_decisions("Reactor", {"heat", "cool"})
+cgs5.add_decisions("Valve", {"open", "lock"})
+
+cgs5.add_state("start")
+cgs5.add_state("efficient")
+cgs5.add_state("underpowered")
+cgs5.add_state("danger")
+cgs5.add_state("shutdown")
+
+cgs5.set_initial_state("start")
+
+cgs5.label_state("start", {"safe","start"})
+cgs5.label_state("efficient", {"safe","operational","efficient"})
+cgs5.label_state("underpowered", {"safe","operational","underpowered"})
+cgs5.label_state("danger", {"operational","danger"})
+cgs5.label_state("shutdown", {"emergency"})
+
+
+cgs5.add_transition("start", {("Reactor", "heat"), ("Valve", "open")}, "start")
+cgs5.add_transition("start", {("Reactor", "heat"), ("Valve", "lock")}, "efficient")
+cgs5.add_transition("start", {("Reactor", "cool"), ("Valve", "open")}, "start")
+cgs5.add_transition("start", {("Reactor", "cool"), ("Valve", "lock")}, "start")
+
+cgs5.add_transition("efficient", {("Reactor", "heat"), ("Valve", "open")}, "efficient")
+cgs5.add_transition("efficient", {("Reactor", "heat"), ("Valve", "lock")}, "danger")
+cgs5.add_transition("efficient", {("Reactor", "cool"), ("Valve", "open")}, "underpowered")
+cgs5.add_transition("efficient", {("Reactor", "cool"), ("Valve", "lock")}, "underpowered")
+
+cgs5.add_transition("underpowered", {("Reactor", "heat"), ("Valve", "open")}, "underpowered")
+cgs5.add_transition("underpowered", {("Reactor", "heat"), ("Valve", "lock")}, "efficient")
+cgs5.add_transition("underpowered", {("Reactor", "cool"), ("Valve", "open")}, "start")
+cgs5.add_transition("underpowered", {("Reactor", "cool"), ("Valve", "lock")}, "start")
+
+cgs5.add_transition("danger", {("Reactor", "heat"), ("Valve", "open")}, "danger")
+cgs5.add_transition("danger", {("Reactor", "heat"), ("Valve", "lock")}, "shutdown")
+cgs5.add_transition("danger", {("Reactor", "cool"), ("Valve", "open")}, "underpowered")
+cgs5.add_transition("danger", {("Reactor", "cool"), ("Valve", "lock")}, "efficient")
+
+cgs5.add_transition("shutdown", {("Reactor", "heat"), ("Valve", "open")}, "start")
+cgs5.add_transition("shutdown", {("Reactor", "heat"), ("Valve", "lock")}, "start")
+cgs5.add_transition("shutdown", {("Reactor", "cool"), ("Valve", "open")}, "start")
+cgs5.add_transition("shutdown", {("Reactor", "cool"), ("Valve", "lock")}, "start")
+
+
+
+
 cgs1 = CGS()
 
 cgs1.add_proposition("safe")
@@ -2219,62 +2022,6 @@ cgs1.add_transition("s4", {("Reactor", "heat"), ("Valve", "lock")}, "s0")
 cgs1.add_transition("s4", {("Reactor", "cool"), ("Valve", "open")}, "s0")
 cgs1.add_transition("s4", {("Reactor", "cool"), ("Valve", "lock")}, "s0")
 
-
-cgs5 = CGS()
-
-cgs5.add_proposition("safe")
-cgs5.add_proposition("start")
-cgs5.add_proposition("operational")
-cgs5.add_proposition("efficient")
-cgs5.add_proposition("underpowered")
-cgs5.add_proposition("danger")
-cgs5.add_proposition("emergency")
-
-cgs5.add_agent("Reactor")
-cgs5.add_agent("Valve")
-
-cgs5.add_decisions("Reactor", {"heat", "cool"})
-cgs5.add_decisions("Valve", {"open", "lock"})
-
-cgs5.add_state("start")
-cgs5.add_state("efficient")
-cgs5.add_state("underpowered")
-cgs5.add_state("danger")
-cgs5.add_state("shutdown")
-
-cgs5.set_initial_state("start")
-
-cgs5.label_state("start", {"safe","start"})
-cgs5.label_state("efficient", {"safe","operational","efficient"})
-cgs5.label_state("underpowered", {"safe","operational","underpowered"})
-cgs5.label_state("danger", {"operational","danger"})
-cgs5.label_state("shutdown", {"emergency"})
-
-
-cgs5.add_transition("start", {("Reactor", "heat"), ("Valve", "open")}, "start")
-cgs5.add_transition("start", {("Reactor", "heat"), ("Valve", "lock")}, "efficient")
-cgs5.add_transition("start", {("Reactor", "cool"), ("Valve", "open")}, "start")
-cgs5.add_transition("start", {("Reactor", "cool"), ("Valve", "lock")}, "start")
-
-cgs5.add_transition("efficient", {("Reactor", "heat"), ("Valve", "open")}, "efficient")
-cgs5.add_transition("efficient", {("Reactor", "heat"), ("Valve", "lock")}, "danger")
-cgs5.add_transition("efficient", {("Reactor", "cool"), ("Valve", "open")}, "underpowered")
-cgs5.add_transition("efficient", {("Reactor", "cool"), ("Valve", "lock")}, "underpowered")
-
-cgs5.add_transition("underpowered", {("Reactor", "heat"), ("Valve", "open")}, "underpowered")
-cgs5.add_transition("underpowered", {("Reactor", "heat"), ("Valve", "lock")}, "efficient")
-cgs5.add_transition("underpowered", {("Reactor", "cool"), ("Valve", "open")}, "start")
-cgs5.add_transition("underpowered", {("Reactor", "cool"), ("Valve", "lock")}, "start")
-
-cgs5.add_transition("danger", {("Reactor", "heat"), ("Valve", "open")}, "danger")
-cgs5.add_transition("danger", {("Reactor", "heat"), ("Valve", "lock")}, "shutdown")
-cgs5.add_transition("danger", {("Reactor", "cool"), ("Valve", "open")}, "underpowered")
-cgs5.add_transition("danger", {("Reactor", "cool"), ("Valve", "lock")}, "efficient")
-
-cgs5.add_transition("shutdown", {("Reactor", "heat"), ("Valve", "open")}, "start")
-cgs5.add_transition("shutdown", {("Reactor", "heat"), ("Valve", "lock")}, "start")
-cgs5.add_transition("shutdown", {("Reactor", "cool"), ("Valve", "open")}, "start")
-cgs5.add_transition("shutdown", {("Reactor", "cool"), ("Valve", "lock")}, "start")
 
 
 # ------------------------------------------------------------
@@ -2697,27 +2444,6 @@ def generate_valid_formulas_by_depth(cgs,
 # ===========================
 #  ACG BUILD
 # ===========================
-
-def build_acg_with_timer(ast):
-    start = time.perf_counter()
-    acg = build_acg(ast)
-    elapsed = time.perf_counter() - start
-    size = compute_acg_size(acg)
-    return acg, size, elapsed
-
-def build_acg_with_timer2(ast,cgs):
-    start = time.perf_counter()
-    acg = build_acg2(ast,cgs)
-    elapsed = time.perf_counter() - start
-    size = compute_acg_size(acg)
-    return acg, size, elapsed
-
-def build_acg_with_timer_final(ast,cgs):
-    start = time.perf_counter()
-    acg = build_acg_final(ast,cgs)
-    elapsed = time.perf_counter() - start
-    size = compute_acg_size(acg)
-    return acg, size, elapsed
 
 
 def classify_game_node(node):
@@ -3433,13 +3159,6 @@ def log(msg: str) -> None:
 # ────────────────────────────────────────────────────────────────
 
 
-class Coalition(list):
-    def __sub__(self, other):   # A − A′
-        return set(self) - set(other)
-
-def full_coalition(n: int) -> Coalition:
-    return Coalition(f"ctrl_{i}" for i in range(n))
-
 # ────────────────────────────────────────────────────────────────
 # Globally
 
@@ -3966,13 +3685,17 @@ def TESTEONORMAL_FINAL(input_formula_str: str, cgs):
 
 
 
-
-
-
-
 # ────────────────────────────────────────────────────────────────
 # PARAMETRICS
 # ────────────────
+
+class Coalition(list):
+    def __sub__(self, other):   # A − A′
+        return set(self) - set(other)
+
+def full_coalition(n: int) -> Coalition:
+    return Coalition(f"ctrl_{i}" for i in range(n))
+
 
 def generate_lights_cgs(n: int) -> CGS:
     """
@@ -4312,8 +4035,6 @@ def generate_negated_flatU_spec(n: int) -> ParseNode:
         phi = Modality(A, clause) if False else And(phi, clause)  # fix And import if needed
     return phi
 
-# 2) Nested U negation: entire
-
 def generate_negated_nestedU_spec(n: int) -> ParseNode:
     """
     ψₙ = ¬(⟨Aₙ⟩ (p_0 U (⟨Aₙ⟩ (p_1 U … p_{n-1}))) )
@@ -4322,8 +4043,6 @@ def generate_negated_nestedU_spec(n: int) -> ParseNode:
     A = full_coalition(n)
     nested = nested_U_formula(n, A)
     return Not(nested)
-
-# 3) Nested U negation: stepwise
 
 def generate_stepwise_negated_nestedU_spec(n: int) -> ParseNode:
     """
@@ -4347,8 +4066,6 @@ def generate_stepwise_negated_nestedU_spec(n: int) -> ParseNode:
 
     # Finalmente, ¬⟨A⟩(...) sobre el todo
     return Not(Modality(A, node))
-
-# 4) Individual versions
 
 def generate_negated_nestedU_individual_spec(n: int) -> ParseNode:
     nested = nested_U_individual_formula(n)
