@@ -80,7 +80,7 @@ def generate_random_valid_atl_formula(cgs, depth, modality_needed=True, max_trie
         if filter(f) == "ATL" and formula_depth(f) == depth:
             return f
         tries += 1
-    raise RuntimeError(f"No se pudo generar fórmula de profundidad {depth} tras {max_tries} intentos")
+    raise RuntimeError(f"Not generated formula with depth {depth} after {max_tries} attempts")
 
 def generate_valid_formulas_by_depth(cgs, min_depth: int, max_depth: int, samples_per_depth: int):
     for depth in range(min_depth, max_depth + 1):
