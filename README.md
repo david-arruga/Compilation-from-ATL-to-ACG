@@ -1,60 +1,57 @@
 
 # Compilation from ATL to ACG
 
-A modular reference implementation for the end‑to‑end compilation and verification pipeline:
+This repository contains the research software implementing the technical results of the associated thesis ([PDF](./docs/thesis.pdf?raw=1)). The tool checks whether coalitions of agents can guarantee temporal goals in interactive systems. Given a Concurrent Game Structure (CGS) and an Alternating-time Temporal Logic (ATL) formula, it runs an end-to-end compilation pipeline: parsing and normalisation → construction of an Automaton over Concurrent Game Structures (ACG) → product acceptance game → Büchi game solving to decide acceptance of the formula on the model. The work provides an alternative to traditional ATL model checking by introducing a compilation approach based on ACGs. The repository also includes four reference CGSs and two benchmarking suites (random ATL formulae and parametric light-switch families).
 
-**Parsing → Normalisation → ACG construction → Acceptance Game → Büchi solving**,
-including four example Concurrent Game Structures (CGS) and two benchmarking suites
-(random ATL formulae; parametric families based on light‑switch controllers).
+## Algorithmic Overview
 
-> This repository accompanies a computational logic thesis. The code is organized to make
-> each mathematical stage explicit, testable, and reusable.
+Given an ATL formula φ and a Concurrent Game Structure (CGS) C, the tool constructs an Automaton over Concurrent Game Structures (ACG), forms the product acceptance game ACG × C, and solves a Büchi game to decide acceptance of φ on C. Each stage mirrors the underlying mathematics:
 
----
+1. **Preprocessing (preprocessing/)**  
+   The input ATL formula is tokenized and parsed into an AST. We then apply modal dualities (to eliminate dual boxes via negation) and rewrite derived operators so that `Release` and `Eventually` are expressed using the core temporal connectives (`Until`, `Next`). Finally, we push negations to obtain Negation Normal Form. The result is a normalized AST φ′ semantically equivalent to the original φ.
 
-## 1. Scientific Overview
+2. **ACG Construction (acg/)**  
+   From φ′ we extract the set of atomic propositions AP and compute the closure Cl(φ′), consisting of subformulas and their negations. The ACG uses states Q = Cl(φ′), initial state q₀ = φ′, and (optionally) alphabet Σ ⊆ 2^AP. Transitions δ are specified compositionally: Boolean nodes map to conjunction/disjunction over ε-atoms; temporal/modality nodes map to **UniversalAtom**/**ExistentialAtom** obligations over sub-states and coalitions. Atomic states `p` and `¬p` are evaluated lazily against the current label σ ⊆ AP. The Büchi acceptance set F ⊆ Q corresponds to the standard acceptance conditions induced by the normalized temporal patterns present in φ′.
 
-Given an ATL formula φ and a Concurrent Game Structure (CGS) C, this project builds an
-*automaton over CGS* (ACG), forms the product Acceptance Game G = ACG × C,
-then solves the (Büchi) game over A to determine whether φ is satisfiable on C.
+3. **Acceptance Game (acceptance_game/)**  
+   We build the product arena whose positions track both the automaton state and the CGS state, together with intermediate “choice” layers that encode the disjunctive/conjunctive structure of δ and the alternation of strategic quantifiers. The arena is partitioned into S₁ (Prover) and S₂ (Refuter); the Büchi set B lifts the automaton acceptance F to product positions. Edges are induced by δ-expansion and by CGS transitions under joint actions of agents.
 
-Mathematical components reflected in the code:
+4. **Büchi Solving (büchi_solver/)**  
+   A classical predecessor/attractor iteration computes the winning set Sⱼ for S₁ in the Büchi game. Acceptance of φ on C holds exactly when the initial product position belongs to Sⱼ.
 
-1. **Syntactic processing** (tokenization, parsing to AST).
-2. **Normalisation** (modal dualities, elimination of Release and Eventually → Until, NNF).
-3. **ACG construction** (closure of subformulas; compact δ with wildcard; lazy evaluation for
-   atomic states p and ¬p against labels σ ⊆ AP).
-4. **Acceptance Game** (layered arena with state → atom\_selection → atom\_applied → …,
-   partition into S1/S2 and Büchi set B).
-5. **Büchi solver** (classical predecessor/attractor iteration yielding the winning set Sj).
+This pipeline establishes a compilation-based alternative to traditional ATL model checking, replacing on-the-fly evaluation with a structured construction: **formula → ACG → acceptance game → Büchi solution**.
 
----
+## Repository Layout
 
-## 2. Repository Layout
-
-```
 .
-├── main.py                                  # End‑to‑end driver (edit formula/CGS as desired)
-├── preprocessing/                           # Lexing, AST, parsing, normalisation, ATL filter
+├── README.md
+├── main.py
+├── requirements.txt
+├── LICENSE
+├── CITATION.cff
+├── .gitattributes
+├── docs/
+│   └── thesis.pdf
+├── preprocessing/
 │   ├── __init__.py
 │   ├── tokens.py
 │   ├── ast_nodes.py
 │   ├── parser.py
 │   ├── transformer.py
 │   └── validator.py
-├── acg/                                     # ACG core and builders
+├── acg/
 │   ├── __init__.py
-│   ├── cgs.py                               # CGS class used across the pipeline
-│   ├── acg_core.py                          # Universal/Existential/Epsilon atoms, ACG
-│   ├── build.py                             # Closure, transitions, size utilities
-│   └── utils.py                             # Helpers for atomic δ and analysis
-├── acceptance_game/                         # Product ACG×CGS and expansion routines
+│   ├── cgs.py
+│   ├── acg_core.py
+│   ├── build.py
+│   └── utils.py
+├── acceptance_game/
 │   ├── __init__.py
-│   ├── product.py                           # GameProduct container and pretty printing
-│   ├── expanders.py                         # State expansion (state/atom_selection/…)
+│   ├── product.py
+│   ├── expanders.py
 │   ├── utils.py
-│   └── examples.py                          # cgs1..cgs4 used in the thesis
-├── büchi_solver/                            # Predecessors, attractors, Büchi solver
+│   └── examples.py
+├── buchi_solver/
 │   ├── __init__.py
 │   ├── predecessors.py
 │   ├── attractor.py
@@ -62,27 +59,20 @@ Mathematical components reflected in the code:
 ├── benchmarks/
 │   ├── random_generator/
 │   │   ├── __init__.py
-│   │   └── generator.py                     # Valid ATL formulae by exact depth
+│   │   └── generator.py
 │   └── parametric_families/
 │       ├── __init__.py
-│       ├── cgs_factory.py                   # Light‑switch CGS with n controllers
-│       ├── families_x.py                    # Families using Next
-│       ├── families_g.py                    # Families using Globally
-│       └── families_u.py                    # Families using Until
-├── smoke_preprocessing.py                   # Sanity test of preprocessing
-├── smoke_acg.py                             # ACG construction sanity test
-├── smoke_acceptance_game.py                 # Product construction sanity test
-├── smoke_solver.py                          # End‑to‑end (ACG×CGS + Büchi)
-├── requirements.txt
-├── LICENSE
-└── CITATION.cff
-```
+│       ├── cgs_factory.py
+│       ├── families_x.py
+│       ├── families_g.py
+│       └── families_u.py
+├── smokes/
+│   ├── smoke_preprocessing.py
+│   ├── smoke_acg.py
+│   ├── smoke_acceptance_game.py
+│   └── smoke_solver.py
 
-> Note: The package directory name `büchi_solver/` uses a non‑ASCII character. On systems
-> where this is problematic, use a consistent ASCII spelling (e.g. `buchi_solver`) **throughout**
-> the folder name and imports.
 
----
 
 ## 3. Software Requirements
 
