@@ -1,7 +1,6 @@
-*.pdf -text
-*.png -text
-*.jpg -text
-*.jpeg -text
-*.gif -text
-*.zip -text
-docs/*.pdf linguist-document
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.zip binary
