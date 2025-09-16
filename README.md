@@ -72,6 +72,7 @@ This pipeline establishes a compilation-based alternative to traditional ATL mod
     ├── smoke_acg.py
     ├── smoke_acceptance_game.py
     └── smoke_solver.py
+```
 
 
 ## 3. Software Requirements
