@@ -23,6 +23,7 @@ This pipeline establishes a compilation-based alternative to traditional ATL mod
 
 ## Repository Layout
 
+```text
 .
 ├── README.md
 ├── main.py
@@ -66,12 +67,11 @@ This pipeline establishes a compilation-based alternative to traditional ATL mod
 │       ├── families_x.py
 │       ├── families_g.py
 │       └── families_u.py
-├── smokes/
-│   ├── smoke_preprocessing.py
-│   ├── smoke_acg.py
-│   ├── smoke_acceptance_game.py
-│   └── smoke_solver.py
-
+└── smokes/
+    ├── smoke_preprocessing.py
+    ├── smoke_acg.py
+    ├── smoke_acceptance_game.py
+    └── smoke_solver.py
 
 
 ## 3. Software Requirements
