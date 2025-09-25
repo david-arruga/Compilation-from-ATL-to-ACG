@@ -3,7 +3,7 @@
 
 This repository contains the research software implementing the technical results of the associated thesis ([PDF](./docs/thesis.pdf)). The tool checks whether coalitions of agents can guarantee temporal goals in interactive systems. Given a Concurrent Game Structure (CGS) and an Alternating-time Temporal Logic (ATL) formula, it runs an end-to-end compilation pipeline: parsing and normalisation → construction of an Automaton over Concurrent Game Structures (ACG) → product acceptance game → Büchi game solving to decide acceptance of the formula on the model. The work provides an alternative to traditional ATL model checking by introducing a compilation approach based on ACGs. The repository also includes four reference CGSs and two benchmarking suites (random ATL formulae and parametric light-switch families).
 
-## Algorithmic Overview
+## Overview
 
 Given an ATL formula φ and a Concurrent Game Structure (CGS) C, the tool constructs an Automaton over Concurrent Game Structures (ACG), forms the product acceptance game ACG × C, and solves a Büchi game to decide acceptance of φ on C. Each stage mirrors the underlying mathematics:
 
@@ -14,12 +14,10 @@ Given an ATL formula φ and a Concurrent Game Structure (CGS) C, the tool constr
    From φ′ we extract the set of atomic propositions AP and compute the closure Cl(φ′), consisting of subformulas and their negations. The ACG uses states Q = Cl(φ′), initial state q₀ = φ′, and (optionally) alphabet Σ ⊆ 2^AP. Transitions δ are specified compositionally: Boolean nodes map to conjunction/disjunction over ε-atoms; temporal/modality nodes map to **UniversalAtom**/**ExistentialAtom** obligations over sub-states and coalitions. Atomic states `p` and `¬p` are evaluated lazily against the current label σ ⊆ AP. The Büchi acceptance set F ⊆ Q corresponds to the standard acceptance conditions induced by the normalized temporal patterns present in φ′.
 
 3. **Acceptance Game (acceptance_game/)**  
-   We build the product arena whose positions track both the automaton state and the CGS state, together with intermediate “choice” layers that encode the disjunctive/conjunctive structure of δ and the alternation of strategic quantifiers. The arena is partitioned into S₁ (Prover) and S₂ (Refuter); the Büchi set B lifts the automaton acceptance F to product positions. Edges are induced by δ-expansion and by CGS transitions under joint actions of agents.
+   We build the product arena whose positions track both the automaton state and the CGS state, together with intermediate “choice” layers that encode the disjunctive/conjunctive structure of δ and the alternation of strategic quantifiers. The arena is partitioned into Accept and Reject; the Büchi set B lifts the automaton acceptance F to product positions. Edges are induced by δ-expansion and by CGS transitions under joint actions of agents.
 
 4. **Büchi Solving (büchi_solver/)**  
-   A classical predecessor/attractor iteration computes the winning set Sⱼ for S₁ in the Büchi game. Acceptance of φ on C holds exactly when the initial product position belongs to Sⱼ.
-
-This pipeline establishes a compilation-based alternative to traditional ATL model checking, replacing on-the-fly evaluation with a structured construction: **formula → ACG → acceptance game → Büchi solution**.
+   A classical predecessor/attractor iteration computes the winning set for Accept in the Büchi game. Acceptance of φ on C holds exactly when the initial product position belongs to Accept.
 
 ## Repository Layout
 
