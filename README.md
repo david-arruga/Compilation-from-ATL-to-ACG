@@ -238,29 +238,20 @@ ACG = build_acg_final(phi, G, materialize_alphabet=False)
 
 ## 8. How to Cite
 
-Please cite this repository as:
+If you use this repository, please cite it as:
 
-```
-@software{Compilation_from_ATL_to_ACG,
-  author  = {Arruga, David},
-  title   = {Compilation from ATL to ACG: A Modular Pipeline},
-  year    = {2025},
-  url     = {https://github.com/david-arruga/Compilation-from-ATL-to-ACG}
+```bibtex
+@software{arruga2025_acg_pipeline,
+  author = {Arruga, David},
+  title  = {Compilation from ATL to ACG: A Modular Pipeline},
+  year   = {2025},
+  url    = {https://github.com/david-arruga/Compilation-from-ATL-to-ACG},
+  note   = {Version v0.1.0}
 }
 ```
-
-A `CITATION.cff` file is included for GitHub’s citation widget.
 
 ---
 
 ## 9. License
 
-This project is released under the terms of the LICENSE file included in this repository.
-
----
-
-## 10. Contact
-
-For questions or clarifications regarding the code or the accompanying thesis, please open an
-issue on GitHub or contact the author through the email listed in the thesis manuscript.
-
+Released under the MIT License. See the `LICENSE` file for details.
