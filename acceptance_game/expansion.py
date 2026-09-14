@@ -1,4 +1,4 @@
-from preprocessing.ast_nodes import Top, Bottom
+from preprocessing.ast_nodes import Top, Bottom, Conj, Disj
 from acg import EpsilonAtom, UniversalAtom, ExistentialAtom
 from .utils import generate_possibilities
 
@@ -17,6 +17,21 @@ def expand_from_state_node(product, q, s):
     relevant_props = product.acg.propositions
     projected_label = frozenset(p for p in product.cgs.labeling_function[s] if p in relevant_props)
     delta_formula = product.acg.get_transition(q, projected_label)
+    def validate_transition(t):
+        if isinstance(t, (Top, Bottom)):
+            return
+        if isinstance(t, (Conj, Disj)):
+            validate_transition(t.lhs)
+            validate_transition(t.rhs)
+            return
+        if isinstance(t, (EpsilonAtom, UniversalAtom, ExistentialAtom)):
+            if t.state not in product.acg.states:
+                raise ValueError("Transition atom targets an undeclared ACG state.")
+            if not isinstance(t, EpsilonAtom) and not t.agents <= product.cgs.agents:
+                raise ValueError("Transition atom contains an unknown agent.")
+            return
+        raise ValueError("Unsupported Boolean transition node.")
+    validate_transition(delta_formula)
     if "true_sink" not in product.states:
         product.states.add("true_sink")
         product.transitions[("true_sink", "true_sink")] = None
@@ -34,7 +49,14 @@ def expand_from_state_node(product, q, s):
         product.states.add("false_sink")
         product.transitions[(("state", q, s), "false_sink")] = None
         return
-    for U in generate_possibilities(delta_formula):
+    supports = generate_possibilities(delta_formula)
+    if not supports:
+        product.transitions[(("state", q, s), "false_sink")] = None
+        return
+    for U in supports:
+        if not U:
+            product.transitions[(("state", q, s), "true_sink")] = None
+            continue
         atom_selection_node = ("atom_selection", q, s, frozenset(U))
         product.states.add(atom_selection_node)
         product.transitions[(("state", q, s), atom_selection_node)] = None

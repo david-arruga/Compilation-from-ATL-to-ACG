@@ -61,7 +61,8 @@ cgs2 = CGS()
 for p in (
     "cars_go", "cars_wait", "cross", "dont_cross",
     "clear", "busy", "yellow_phase", "violation",
-    "crash", "night_mode", "emergency", "sensor_fault"
+    "crash", "night_mode", "emergency", "sensor_fault",
+    "peds_cross", "peds_wait", "emergency_peds"
 ):
     cgs2.add_proposition(p)
 
@@ -69,7 +70,7 @@ cgs2.add_agent("CarLight")
 cgs2.add_agent("PedLight")
 
 cgs2.add_decisions("CarLight", {"green", "yellow", "red"})
-cgs2.add_decisions("PedLight", {"wait", "walk"})
+cgs2.add_decisions("PedLight", {"dontWalk", "walk"})
 
 for st in ("s0", "s1", "s2", "s3", "s4", "s5"):
     cgs2.add_state(st)

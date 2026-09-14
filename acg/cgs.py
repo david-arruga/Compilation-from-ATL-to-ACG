@@ -37,12 +37,12 @@ class CGS:
         self.decisions[agent] = set(decision_set)
 
     def add_transition(self, state, joint_decision, next_state):
-        if state not in self.states:
-            self.add_state(state)
-        if next_state not in self.states:
-            self.add_state(next_state)
         ordered_joint_action = frozenset(sorted(joint_decision, key=lambda x: x[0]))
-        self.transition_function[(state, ordered_joint_action)] = next_state
+        key = (state, ordered_joint_action)
+        if key in self.transition_function and self.transition_function[key] != next_state:
+            raise ValueError("Conflicting successors for the same joint decision.")
+        self.states.update((state, next_state))
+        self.transition_function[key] = next_state
 
     def get_all_agent_choices(self, agent_subset):
         agent_subset = sorted(agent_subset)
@@ -60,7 +60,10 @@ class CGS:
 
     def get_successor(self, state, joint_decision_dict):
         joint_action = frozenset(sorted(joint_decision_dict.items()))
-        return self.transition_function.get((state, joint_action), None)
+        try:
+            return self.transition_function[(state, joint_action)]
+        except KeyError as exc:
+            raise ValueError("Missing CGS transition for state and joint decision.") from exc
     
     def get_propositions(self):
         return sorted(self.propositions)
@@ -95,16 +98,34 @@ class CGS:
                             if a not in self.decisions or not self.decisions[a]]
         if missing_dec_sets:
             errors.append(f"Agents without decision sets: {missing_dec_sets}")
-        joint_actions = list(product(*[[(a,d) for d in sorted(self.decisions[a])]
-                                    for a in sorted(self.agents)]))
-        for s in self.states:
-            for ja in joint_actions:
-                ja_key = frozenset(ja)
-                if (s, ja_key) not in self.transition_function:
-                    errors.append(f"Missing transition from {s} with {dict(ja)}.")
-        for (src, _), dst in self.transition_function.items():
-            if dst not in self.states:
-                errors.append(f"Transition points to undefined state {dst}.")
+        if not self.agents:
+            errors.append("The thesis scope requires a nonempty agent set.")
+        if None in self.states:
+            errors.append("None is reserved for missing states in this representation.")
+        if set(self.decisions) - self.agents:
+            errors.append("Decision sets for unknown agents.")
+        if set(self.labeling_function) - self.states:
+            errors.append("Labels for unknown states.")
+        joint_actions = []
+        if not missing_dec_sets:
+            joint_actions = list(product(*[[(a, d) for d in self.decisions[a]]
+                                           for a in sorted(self.agents)]))
+            for s in self.states:
+                for ja in joint_actions:
+                    if (s, frozenset(ja)) not in self.transition_function:
+                        errors.append(f"Missing transition from {s} with {dict(ja)}.")
+        for (src, decision), dst in self.transition_function.items():
+            if src not in self.states or dst not in self.states:
+                errors.append("Transition endpoint outside the state set.")
+            pairs = list(decision)
+            if any(not isinstance(pair, tuple) or len(pair) != 2 for pair in pairs):
+                errors.append("Malformed joint decision.")
+                continue
+            names = [a for a, _ in pairs]
+            if len(names) != len(set(names)) or set(names) != self.agents:
+                errors.append("A joint decision must assign exactly one action to each agent.")
+            if any(d not in self.decisions.get(a, set()) for a, d in pairs):
+                errors.append("Joint decision contains an unavailable action.")
         for st in self.states:
             if st not in self.labeling_function:
                 errors.append(f"State {st} has no label.")

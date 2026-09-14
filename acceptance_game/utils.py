@@ -2,8 +2,6 @@ from preprocessing.ast_nodes import Top, Bottom, Conj, Disj
 from acg import EpsilonAtom, UniversalAtom, ExistentialAtom
 
 def evaluate_boolean_formula(formula, atom_set):
-    if isinstance(formula, str):
-        return formula != "∅"
     if isinstance(formula, Top):
         return True
     if isinstance(formula, Bottom):
@@ -18,12 +16,20 @@ def evaluate_boolean_formula(formula, atom_set):
             evaluate_boolean_formula(formula.lhs, atom_set)
             or evaluate_boolean_formula(formula.rhs, atom_set)
         )
-    for atom in atom_set:
-        if formula == atom:
-            return True
-    return False
+    if isinstance(formula, (EpsilonAtom, UniversalAtom, ExistentialAtom)):
+        return formula in atom_set
+    raise ValueError("Unsupported Boolean transition node.")
 
 def generate_possibilities(formula):
+    """Supports generating all satisfying assignments by upward closure.
+
+    Supports need not be minimal: duplication/supersets do not change truth.
+    True has the empty support; false has no support.
+    """
+    if isinstance(formula, Top):
+        return [frozenset()]
+    if isinstance(formula, Bottom):
+        return []
     if isinstance(formula, (EpsilonAtom, UniversalAtom, ExistentialAtom)):
         return [frozenset([formula])]
     elif isinstance(formula, Conj):
@@ -34,7 +40,7 @@ def generate_possibilities(formula):
         left = generate_possibilities(formula.lhs)
         right = generate_possibilities(formula.rhs)
         return left + right
-    return []
+    raise ValueError("Unsupported Boolean transition node.")
 
 def pretty_node(node):
     if isinstance(node, str):

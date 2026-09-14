@@ -121,3 +121,37 @@ Pendientes: auditoría general de arena/CGS y soportes (incluidas entradas
 ACG externas al compilador), coste y representación, reproducción de datos y
 actualización de capítulos 4/5. No se ha modificado LaTeX ni certificado los
 experimentos anteriores. Las pruebas de Lean no se atribuyen a este código.
+
+## Bloque 4 — contrato CGS y soportes de transición
+
+Corregidos: `acg/cgs.py`, `acceptance_game/builder.py`,
+`acceptance_game/expansion.py`, `acceptance_game/utils.py`,
+`acceptance_game/examples.py`. Pruebas: `tests/test_arena_contract.py`.
+
+- Un conjunto de movimientos ausente se rechaza con ValueError, no KeyError.
+- Se comprueban extremos de transiciones, asignación de una acción legal por
+  agente, etiquetas y movimientos no vacíos. No se exige alcanzabilidad salvo
+  petición explícita. None permanece reservado en esta representación.
+- Una transición contradictoria no sobrescribe la anterior; una transición
+  inexistente no desaparece silenciosamente al consultar su sucesor.
+- build_game valida el CGS, estado inicial y aceptación ACG. Las transiciones
+  visitadas se comprueban antes de expandirlas (tipos, estados destino, agentes).
+  Esto no inspecciona todas las transiciones inalcanzables de un ACG externo.
+- Top tiene soporte vacío; Bottom no tiene soportes. Las constantes anidadas
+  ahora se expanden correctamente. El soporte vacío lleva al sumidero ganador;
+  la ausencia de soportes al perdedor, evitando vértices sin sucesores.
+- cgs2 declaraba wait mientras todas las transiciones usaban dontWalk; la
+  declaración ahora sigue la tabla existente. Se declaran peds_cross, peds_wait
+  y emergency_peds, ya presentes en etiquetas. No se cambian destinos ni etiquetas.
+  Este arreglo estructural no revalida la interpretación ni los experimentos
+  históricos del ejemplo. Los cuatro modelos ahora superan validate().
+
+Validación: 25 pruebas correctas. Se añaden 1152 comparaciones de soportes con
+asignaciones booleanas, casos de constantes anidadas, rechazo de modelos
+malformados, conservación de estados inalcanzables y validación de los ejemplos.
+Se conservan las pruebas concurrentes y del solver. No es una prueba universal
+ni una verificación Lean del Python. Las acciones siguen siendo globales por
+agente, especialización de los movimientos locales de la tesis.
+
+Pendientes principales: interpretación detallada de ejemplos/capítulos 4 y 5,
+reproducibilidad experimental y coste real del constructor y del solver.
