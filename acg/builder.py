@@ -3,6 +3,7 @@ import time
 from copy import deepcopy
 from preprocessing.ast_nodes import ParseNode, T, F, Var, And, Or, Not, Next, Globally, Eventually, Until, Modality, DualModality, Conj, Disj, Top, Bottom
 from preprocessing.transformer import push_negations_to_nnf
+from preprocessing.validator import validate_core_atl
 from .model import ACG, EpsilonAtom, ExistentialAtom, UniversalAtom
 
 def _is_atomic_state(state):
@@ -143,6 +144,7 @@ def generate_transitions_final(acg, cgs):
             )
 
 def build_acg_final(transformed_ast, cgs, materialize_alphabet: bool = False):
+    validate_core_atl(transformed_ast, cgs.agents)
     acg = ACG()
     ap_set = extract_propositions(transformed_ast)
     acg.propositions = ap_set

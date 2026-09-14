@@ -1,6 +1,8 @@
 
 # Compilation from ATL to ACG
 
+> **Revised branch:** `codex/thesis-alignment`. See [revision status](REVISION_STATUS.md) for corrected files, checks and remaining issues. The historical implementation is retained on `main`. This branch is under review; the complete Python pipeline is not yet certified.
+
 This repository contains the research software implementing the technical results of the associated thesis ([PDF](./docs/thesis.pdf)). The tool checks whether coalitions of agents can guarantee temporal goals in interactive systems. Given a Concurrent Game Structure (CGS) and an Alternating-time Temporal Logic (ATL) formula, it runs an end-to-end compilation pipeline: parsing and normalisation → construction of an Automaton over Concurrent Game Structures (ACG) → product acceptance game → Büchi game solving to decide acceptance of the formula on the model. The work provides an alternative to traditional ATL model checking by introducing a compilation approach based on ACGs. The repository also includes four reference CGSs and two benchmarking suites (random ATL formulae and parametric light-switch families).
 
 ## Overview

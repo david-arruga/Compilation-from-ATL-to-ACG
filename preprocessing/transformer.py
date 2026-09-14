@@ -114,12 +114,14 @@ def push_negations_to_nnf(node: ParseNode) -> ParseNode:
 
 
 def normalize_formula(ast: ParseNode) -> ParseNode:
+    from .validator import validate_core_atl
     previous = None
-    current = ast
+    current = apply_modal_dualities(ast)
     while previous != current:
         previous = current
         current = eliminate_f_and_r(current)
         current = push_negations_to_nnf(current)
+    validate_core_atl(current)
     return current
 
 

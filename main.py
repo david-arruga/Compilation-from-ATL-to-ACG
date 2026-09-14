@@ -21,6 +21,7 @@ def run_once(formula: str, cgs_idx: int, materialize_alphabet: bool):
     ast = apply_modal_dualities(ast)
     ast = normalize_formula(ast)
     cgs = pick_cgs(cgs_idx)
+    cgs.validate()
     acg = build_acg_final(ast, cgs, materialize_alphabet=materialize_alphabet)
     V, E, S1, S2, B, initial = build_game(acg, cgs)
     Sj, W_total = solve_buchi_game(V, E, S1, S2, B)
@@ -40,7 +41,7 @@ def run_once(formula: str, cgs_idx: int, materialize_alphabet: bool):
     print("|S2|:", len(S2))
     print("|B|:", len(B))
     print("Winner:", winner)
-    print("Satisfiable:", satisfiable)
+    print("Satisfied in selected CGS:", satisfiable)
 
 def main():
     p = argparse.ArgumentParser(prog="main", description="End-to-end ATL→ACG→Acceptance→Büchi")
