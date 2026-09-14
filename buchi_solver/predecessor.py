@@ -8,7 +8,6 @@ def predecessor_1(E, S1, S2, X):
                 successors = {d for (s, d) in E if s == src}
                 if successors <= X:
                     predecessor.add(src)
-    print(f"\Big predecessor : {predecessor.__str__}")
     return predecessor
 
 def predecessor_2(E, S1, S2, X):
