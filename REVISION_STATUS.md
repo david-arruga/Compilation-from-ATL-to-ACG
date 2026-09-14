@@ -155,3 +155,20 @@ agente, especialización de los movimientos locales de la tesis.
 
 Pendientes principales: interpretación detallada de ejemplos/capítulos 4 y 5,
 reproducibilidad experimental y coste real del constructor y del solver.
+
+## Bloque 5 — reproducción del ejemplo del capítulo 4
+
+Añadidos `scripts/chapter4_trace.py` y `docs/CHAPTER4_WALKTHROUGH.md`.
+La traza verifica la normalización, los 10 estados y aceptación ACG, todas sus
+transiciones sobre las cuatro valoraciones, las 20 transiciones PowerPlant y
+los cinco estados iniciales posibles. Resultado: g vale en s0 y s4; falla en
+s1, s2, s3. Desde s0: 77 vértices, 109 aristas, 23 ganadores y 54 perdedores.
+Ejecutado `python3 -m scripts.chapter4_trace` correctamente. El código de
+producción no cambia en este bloque; no se repiten los tests ya superados.
+
+Diferencias documentadas: núcleo de 10 estados frente a clausura de 12;
+alfabeto simbólico, literales evaluados bajo demanda y contador estados+átomos;
+arena alcanzable con nodos compartidos frente a pseudocódigo completo con
+identidades más detalladas; soportes no necesariamente mínimos. Este cotejo
+no acredita una equivalencia universal de esas representaciones. No se ha
+modificado MAIN_REVISADO ni revalidado los experimentos históricos.
