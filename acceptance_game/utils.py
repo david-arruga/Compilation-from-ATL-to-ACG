@@ -20,7 +20,7 @@ def evaluate_boolean_formula(formula, atom_set):
         return formula in atom_set
     raise ValueError("Unsupported Boolean transition node.")
 
-def generate_possibilities(formula):
+def _generate_supports(formula):
     """Supports generating all satisfying assignments by upward closure.
 
     Supports need not be minimal: duplication/supersets do not change truth.
@@ -33,14 +33,20 @@ def generate_possibilities(formula):
     if isinstance(formula, (EpsilonAtom, UniversalAtom, ExistentialAtom)):
         return [frozenset([formula])]
     elif isinstance(formula, Conj):
-        left = generate_possibilities(formula.lhs)
-        right = generate_possibilities(formula.rhs)
+        left = _generate_supports(formula.lhs)
+        right = _generate_supports(formula.rhs)
         return [a.union(b) for a in left for b in right]
     elif isinstance(formula, Disj):
-        left = generate_possibilities(formula.lhs)
-        right = generate_possibilities(formula.rhs)
+        left = _generate_supports(formula.lhs)
+        right = _generate_supports(formula.rhs)
         return left + right
     raise ValueError("Unsupported Boolean transition node.")
+
+def generate_possibilities(formula):
+    """All inclusion-minimal satisfying supports (chapter 4)."""
+    supports = set(_generate_supports(formula))
+    return [support for support in supports
+            if not any(other < support for other in supports)]
 
 def pretty_node(node):
     if isinstance(node, str):
@@ -58,15 +64,15 @@ def pretty_node(node):
         atoms_str = ", ".join(str(a) for a in sorted(U, key=str))
         return f"('atom_selection', {q.to_formula()}, {s}, {{{atoms_str}}})"
     elif node[0] == "atom_applied":
-        _, q, s, alpha = node
-        return f"('atom_applied', {q.to_formula()}, {s}, {str(alpha)})"
+        _, q, s, support, alpha = node
+        return f"('atom_applied', {q.to_formula()}, {s}, {sorted(str(a) for a in support)}, {str(alpha)})"
     elif node[0] == "reject_univ":
-        _, q, s, A, alpha, d = node
+        _, q, s, support, A, alpha, d = node
         d_str = ", ".join(f"{k}: {v}" for k, v in dict(d).items())
-        return f"('reject_univ', {q.to_formula()}, {s}, {A}, {str(alpha)}, {{{d_str}}})"
+        return f"('reject_univ', {q.to_formula()}, {s}, {sorted(str(a) for a in support)}, {A}, {str(alpha)}, {{{d_str}}})"
     elif node[0] == "accept_exist":
-        _, q, s, A_prime, alpha, v_reject = node
+        _, q, s, support, A_prime, alpha, v_reject = node
         A_str = "{" + ", ".join(A_prime) + "}"
         v_reject_str = ", ".join(f"{k}: {v}" for k, v in dict(v_reject).items())
-        return f"('accept_exist', {q.to_formula()}, {s}, {A_str}, {str(alpha)}, {{{v_reject_str}}})"
+        return f"('accept_exist', {q.to_formula()}, {s}, {sorted(str(a) for a in support)}, {A_str}, {str(alpha)}, {{{v_reject_str}}})"
     return str(node)

@@ -74,30 +74,31 @@ def expand_from_atom_selection_node(product, q, s, U):
                 product.B.add(new_state)
         elif isinstance(alpha, UniversalAtom):
             q_prime = alpha.state
-            new_node = ("atom_applied", q_prime, s, alpha)
+            new_node = ("atom_applied", q, s, U, alpha)
             product.states.add(new_node)
             product.transitions[(("atom_selection", q, s, U), new_node)] = None
             product.S1.add(new_node)
         elif isinstance(alpha,ExistentialAtom):
             q_prime = alpha.state
-            new_node = ("atom_applied", q_prime, s, alpha)
+            new_node = ("atom_applied", q, s, U, alpha)
             product.states.add(new_node)
             product.transitions[(("atom_selection", q, s, U), new_node)] = None
             product.S2.add(new_node)
 
-def expand_from_atom_applied_node(product, q, s, alpha):
+def expand_from_atom_applied_node(product, q, s, U, alpha):
     if isinstance(alpha, UniversalAtom):
         for d in product.cgs.get_all_agent_choices(alpha.agents):
             reject_univ_node = (
                 "reject_univ",
                 q,
                 s,
+                U,
                 alpha.agents,
                 alpha,
                 frozenset(d.items())
             )
             product.states.add(reject_univ_node)
-            product.transitions[(("atom_applied", q, s, alpha), reject_univ_node)] = None
+            product.transitions[(("atom_applied", q, s, U, alpha), reject_univ_node)] = None
             product.S2.add(reject_univ_node)
     elif isinstance(alpha, ExistentialAtom):
         A_prime = alpha.agents
@@ -108,15 +109,16 @@ def expand_from_atom_applied_node(product, q, s, alpha):
                 "accept_exist",
                 q,
                 s,
+                U,
                 A_prime,
                 alpha,
                 frozenset(v_reject.items())
             )
             product.states.add(accept_exist_node)
-            product.transitions[(("atom_applied", q, s, alpha), accept_exist_node)] = None
+            product.transitions[(("atom_applied", q, s, U, alpha), accept_exist_node)] = None
             product.S1.add(accept_exist_node)
 
-def expand_from_reject_univ_node(product, q, s, A, alpha, dA_frozen):
+def expand_from_reject_univ_node(product, q, s, U, A, alpha, dA_frozen):
     dA = dict(dA_frozen)
     remaining_agents = product.cgs.agents - A
     for d_reject in product.cgs.get_all_agent_choices(remaining_agents):
@@ -126,12 +128,12 @@ def expand_from_reject_univ_node(product, q, s, A, alpha, dA_frozen):
             q_prime = alpha.state
             new_node = ("state", q_prime, successor)
             product.states.add(new_node)
-            product.transitions[(("reject_univ", q, s, A, alpha, dA_frozen), new_node)] = None
+            product.transitions[(("reject_univ", q, s, U, A, alpha, dA_frozen), new_node)] = None
             product.S1.add(new_node)
             if q_prime in product.acg.final_states:
                 product.B.add(new_node)
 
-def expand_from_accept_exist_node(product, q, s, agents_prime, alpha, v_reject):
+def expand_from_accept_exist_node(product, q, s, U, agents_prime, alpha, v_reject):
     q_prime = alpha.state
     A_prime = agents_prime
     A = product.cgs.agents
@@ -145,7 +147,7 @@ def expand_from_accept_exist_node(product, q, s, agents_prime, alpha, v_reject):
         if s_prime is not None:
             new_state = ("state", q_prime, s_prime)
             product.states.add(new_state)
-            product.transitions[(("accept_exist", q, s, A_prime, alpha, v_reject), new_state)] = None
+            product.transitions[(("accept_exist", q, s, U, A_prime, alpha, v_reject), new_state)] = None
             product.S1.add(new_state)
             if q_prime in product.acg.final_states:
                 product.B.add(new_state)
@@ -164,15 +166,15 @@ def expand_node(product, node):
         expand_from_atom_selection_node(product, q, s, U)
         return [dst for (src, dst) in product.transitions if src == node]
     elif kind == "atom_applied":
-        _, q, s, alpha = node
-        expand_from_atom_applied_node(product, q, s, alpha)
+        _, q, s, U, alpha = node
+        expand_from_atom_applied_node(product, q, s, U, alpha)
         return [dst for (src, dst) in product.transitions if src == node]
     elif kind == "reject_univ":
-        _, q, s, A, alpha, dA = node
-        expand_from_reject_univ_node(product, q, s, A, alpha, dA)
+        _, q, s, U, A, alpha, dA = node
+        expand_from_reject_univ_node(product, q, s, U, A, alpha, dA)
         return [dst for (src, dst) in product.transitions if src == node]
     elif kind == "accept_exist":
-        _, q, s, A_prime, alpha, v_reject = node
-        expand_from_accept_exist_node(product, q, s, A_prime, alpha, v_reject)
+        _, q, s, U, A_prime, alpha, v_reject = node
+        expand_from_accept_exist_node(product, q, s, U, A_prime, alpha, v_reject)
         return [dst for (src, dst) in product.transitions if src == node]
     return []

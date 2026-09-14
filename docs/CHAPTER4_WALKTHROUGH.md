@@ -102,21 +102,50 @@ Reactor puede elegir cool y llevar a underpowered cualquiera que sea la acción
 de Valve. Desde danger, cool lleva a underpowered o a efficient. Shutdown, en
 cambio, satisface ¬u y todas sus transiciones llevan a start.
 
-## Diferencias que no deben ocultarse
+## Arena completa y exploración desde la raíz
 
-El pseudocódigo del capítulo genera configuraciones Q×S y conserva la fuente y
-el soporte en las identidades auxiliares. Python expande desde la raíz y comparte
-algunos nodos estratégicos con el mismo destino, estado CGS, átomo y movimiento.
-Además, el generador Python produce soportes suficientes, no necesariamente
-mínimos para cualquier fórmula booleana positiva.
+La implementación actual conserva la configuración de origen y el soporte en
+los vértices de átomo y movimiento; usa todos los soportes mínimos. Se han
+retirado las dos diferencias de representación detectadas en el cotejo anterior.
 
-Estas diferencias impiden afirmar igualdad literal de arenas o transferir sus
-conteos directamente. La prueba general de equivalencia de estas optimizaciones
-con esa presentación exacta del texto no se ha añadido aquí. Las comprobaciones
-del ejemplo y las pruebas finitas previas acreditan sus casos, no esa afirmación
-universal. Se debe documentar el puente o alinear las representaciones antes de
-afirmar una correspondencia literal completa.
+```bash
+python3 main.py --formula '<Valve> globally (underpowered implies <Reactor> next efficient)' --cgs 1 --full-arena
+```
 
-La validación no modifica las figuras, resultados experimentales ni el PDF
-histórico de `docs/thesis.pdf`. La actualización integral de capítulos 4/5 y el
-análisis de complejidad real del programa siguen pendientes.
+La arena completa tiene **152 vértices y 216 aristas**, sobre los 10 estados
+core ACG y 5 estados CGS. Sin la opción se explora desde la raíz y se conservan
+ambos sumideros: **77 vértices y 109 aristas**. No deben mezclarse estas medidas.
+Ambas construcciones satisfacen la fórmula desde start.
+
+### Justificación de la restricción alcanzable
+
+Sea J la arena completa y R el conjunto de vértices alcanzables desde la raíz,
+aumentado con los dos sumideros. R es cerrado por sucesores: un sucesor de un
+vértice alcanzable también es alcanzable, y cada sumidero solo se sucede a sí
+mismo. Las reglas de expansión dependen del vértice completo y de las entradas,
+no del orden de visita. Por inducción sobre la longitud de los caminos, la
+exploración visita todos los vértices alcanzables y no introduce otros, salvo
+los sumideros declarados. Conserva exactamente aristas, propietarios y Büchi
+sobre R. Así, las jugadas desde la raíz son las mismas. Una estrategia completa
+se restringe a R; una estrategia en R se extiende arbitrariamente fuera, donde
+hay movimientos legales por totalidad. La condición de aceptación no cambia.
+Este es un argumento matemático de implementación, no un nuevo teorema Lean.
+
+### Justificación de los soportes mínimos
+
+Antes de minimizar, la enumeración tiene la propiedad: una asignación H satisface
+la transición si y solo si contiene algún soporte enumerado. Se prueba por
+inducción: Top enumera el vacío, Bottom ninguno, un átomo su singleton; disyunción
+concatena alternativas y conjunción une cada par de soportes. Si un soporte es
+mínimo entre los enumerados pero tuviera un subconjunto satisfactorio propio,
+la propiedad anterior daría un soporte enumerado aún menor, contradicción.
+Recíprocamente todo soporte satisfactorio mínimo debe ser enumerado. Eliminar
+duplicados y superconjuntos propios produce exactamente los soportes mínimos.
+La enumeración y minimización pueden ser costosas; no se afirma coste lineal.
+
+Se comprueban la identidad de las restricciones en tres fórmulas y la separación
+de vértices en un caso donde distintos soportes comparten un átomo. Las pruebas
+no sustituyen una verificación formal universal del programa.
+
+El PDF histórico de `docs/thesis.pdf` y MAIN_REVISADO no se modifican en este
+bloque. Los resultados experimentales siguen pendientes de reproducción.

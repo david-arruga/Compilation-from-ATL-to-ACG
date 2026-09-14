@@ -172,3 +172,25 @@ arena alcanzable con nodos compartidos frente a pseudocódigo completo con
 identidades más detalladas; soportes no necesariamente mínimos. Este cotejo
 no acredita una equivalencia universal de esas representaciones. No se ha
 modificado MAIN_REVISADO ni revalidado los experimentos históricos.
+
+
+## Bloque 6 — presentación del juego alineada con el texto
+
+Corregidos `acceptance_game/expansion.py`, `utils.py`, `builder.py` y `main.py`.
+Los vértices estratégicos conservan ahora origen y soporte, además de átomo y
+movimiento. La generación devuelve todos los soportes mínimos. La opción
+`build_game(..., full_arena=True)` / `--full-arena` construye Q×S completo.
+La alternativa por defecto explora la raíz y conserva ambos sumideros.
+
+El ejemplo mantiene 77 vértices/109 aristas en modo alcanzable; en modo completo
+produce 152/216 (Q core=10, S=5). Se añade en la guía el argumento de preservación
+por restricción cerrada a sucesores y la justificación de minimización de soportes.
+No se añade un teorema Lean ni se afirma coste lineal de enumerar soportes.
+Las notas de discrepancias de bloques 5 y anteriores describen esas versiones:
+las identidades compartidas y soportes no mínimos ya no se usan en esta rama.
+
+Validación: las 25 pruebas anteriores siguen pasando; tres nuevas pruebas pasan
+(28 en total): soportes mínimos, identidades distintas para fuentes/soportes,
+y comparación exacta de la arena alcanzable con la restricción de la completa
+para tres fórmulas, incluyendo propietarios, aceptación y regiones ganadoras.
+La traza del capítulo 4 también pasa. MAIN_REVISADO y PDF histórico intactos.
