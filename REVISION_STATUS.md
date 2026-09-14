@@ -35,8 +35,8 @@ Estas pruebas no equivalen a una verificación formal universal del Python.
 
 ## Pendientes; no están aprobados por este bloque
 
-1. Auditoría completa del parser (tokens, precedencia y cobertura de sintaxis).
-2. Auditoría semántica restante de normalización y constructor; pruebas de G/U.
+1. Parser: correcciones y regresiones del bloque 2; futuras ampliaciones de sintaxis requieren pruebas.
+2. G/U: comprobación exhaustiva en modelos deterministas de dos estados (bloque 2); falta cubrir elecciones estratégicas concurrentes y auditoría general.
 3. Generación del juego y totalización, cobertura de soportes, validación de CGS.
 4. Solver: atractores sobre la subarena restante, no sobre la arena original.
 5. Coste Python: copias, hashing recursivo, normalización y estructuras de datos.
@@ -45,3 +45,36 @@ Estas pruebas no equivalen a una verificación formal universal del Python.
 7. README histórico: rutas y ejemplos adicionales necesitan actualización.
 
 No se ha cambiado MAIN_REVISADO ni se han revalidado los resultados experimentales.
+
+## Bloque 2 — parser y regresiones temporales
+
+Archivos corregidos: `preprocessing/parser.py`.
+Pruebas añadidas: `tests/test_parser_temporal.py`.
+
+Fallos reproducidos antes del cambio:
+- `Fuel` se interpretaba como F aplicado a `uel`.
+- Identificadores `ctrl_0` y `p_0` no se podían leer.
+- `(<a> X p) U q` movía indebidamente el cuantificador dentro del Until.
+- Se aceptaban coaliciones mal separadas como `<a,>` o `<a b>`.
+- No se leían constantes ni varios símbolos emitidos por `to_formula()`.
+
+El lexer ahora lee identificadores completos, permite guiones bajos, constantes
+`true`, `false`, `⊤`, `⊥`, conectivas Unicode y flechas ASCII.
+Las abreviaturas temporales X/G/F/U/R se reconocen solo como tokens completos.
+La precedencia queda documentada: unarios, U/R, and, or, implies, iff.
+U/R e implicación asocian a la derecha; iff a la izquierda.
+Un operando booleano de X/G/F requiere paréntesis. Se conserva `<a>p U q`
+y se recomienda la forma inequívoca `<a>(p U q)`.
+El parser puede representar formas que la validación posterior rechaza;
+aceptarlas sintácticamente no amplía el fragmento compilado.
+
+Validación: 14 pruebas unittest correctas. Las nuevas pruebas incluyen 1024
+comparaciones del autómata y arena generados frente a la semántica directa
+sobre la trayectoria única, para todos los mapas de transición deterministas
+de dos estados, todas sus etiquetas p/q y ambos estados iniciales.
+Cubren G, U, F, un G con F estratégico anidado y sus negaciones.
+La aceptación se calcula con un oráculo de puntos fijos independiente del
+solver histórico; no certifica el solver de producción. Los modelos de esta
+familia tienen una acción por agente, por lo que no cubren elecciones estratégicas
+concurrentes para G/U. Permanecen las 192 comparaciones estratégicas de Next.
+Las seis reglas del constructor no han necesitado cambios en este bloque.
