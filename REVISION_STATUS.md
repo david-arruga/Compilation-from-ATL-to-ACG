@@ -194,3 +194,26 @@ Validación: las 25 pruebas anteriores siguen pasando; tres nuevas pruebas pasan
 y comparación exacta de la arena alcanzable con la restricción de la completa
 para tres fórmulas, incluyendo propietarios, aceptación y regiones ganadoras.
 La traza del capítulo 4 también pasa. MAIN_REVISADO y PDF histórico intactos.
+
+## Bloque 7 — diagnóstico de coste y evidencia experimental
+
+Añadidos `scripts/performance_audit.py`, `docs/performance_sample.json` y
+`docs/PERFORMANCE_AUDIT.md`. No cambia código de producción.
+Ejecutado el diagnóstico: 21 mediciones, con tiempos separados y hashes fuente.
+
+Hallazgo analítico: para φ_n=⟨a⟩G repetido n veces sobre p, el AST tiene 2n+1
+nodos pero las llamadas a deepcopy de la clausura copian (n+1)² nodos en total.
+Por tanto este Python no cumple coste lineal de peor caso bajo conteo de visitas
+AST. No contradice la construcción lineal formalizada con otra representación.
+Medianas ACG n=8,16,32,64: 0.828, 3.084, 13.388, 55.351 ms; estos tiempos son
+observaciones locales, no la demostración de la cota inferior.
+
+En lights, n produce 2^n estados y 4^n transiciones CGS. No confundir n con el
+tamaño explícito del modelo. Muestra pequeña n=1..3, 3 repeticiones por tamaño,
+con resultado esperado controlado; no reproduce figuras ni comparadores antiguos.
+No se localizaron datos brutos ni scripts de figuras históricas en el repositorio.
+
+Siguiente frente: constructor indexado sin copias/hashing de árboles completos,
+con correspondencia semántica explícita. Mantener como referencia el constructor
+actual y sus comprobaciones. No se actualiza LaTeX ni se proclama rendimiento
+lineal del software a partir de una curva o del número de estados.
