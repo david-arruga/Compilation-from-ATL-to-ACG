@@ -237,3 +237,17 @@ fijos; no se afirma una verificación del tiempo de CPython ni la constante exac
 Lean. Normalización/renderizado/alfabeto explícito/juego/solver quedan separados.
 Pendientes: migración explícita de benchmarks y documentación de ejemplos,
 reproducción de evaluación y traslado de estas notas al LaTeX revisado.
+
+
+## Bloque 9 — gráfica de escalado indexado
+
+Añadidos script scripts/plot_indexed_scaling.py, informe docs/INDEXED_SCALING.md,
+datos indexed_scaling.json / indexed_scaling_gc_disabled.json y gráfica PNG/SVG.
+180 mediciones de constructor sobre AST normalizado; 10 tamaños × 9 repeticiones
+× 2 modalidades de GC. Visitas y tamaños estructurales comprobados en cada medida.
+
+Resultado matizado: tiempo/nodo aproximadamente estable hasta 8193 nodos;
+desviación en los mayores, parcialmente reducida desactivando GC durante la
+construcción. 32769 nodos: 298.603 ms con GC, 144.967 ms sin GC (medianas locales).
+No se afirma una recta perfecta ni una prueba asintótica por regresión.
+No se modifica producción, Lean, LaTeX ni la evaluación histórica.
