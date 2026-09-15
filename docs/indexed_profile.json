@@ -1,0 +1,1713 @@
+{
+  "python": "3.12.14",
+  "compiler_sha256": "6cca3580e58c469ed13a61bb69abf2c8e73a3ea3fbd540fadda9bcaa92626ecd",
+  "methodology": "Fixed one-agent nested G family; randomized interleaved GC modes; 5 repeats per size/mode. GC callback overhead included; cProfile runs separate. Input creation, explicit pre-run collection and output destruction excluded.",
+  "measurements": [
+    {
+      "nodes": 16385,
+      "gc_enabled": false,
+      "repeat": 4,
+      "seconds": 0.11344906500016805,
+      "gc_seconds": 0,
+      "collections_by_generation": {
+        "0": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "1": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 32769,
+      "gc_enabled": true,
+      "repeat": 2,
+      "seconds": 0.39358445099969686,
+      "gc_seconds": 0.16192820599189872,
+      "collections_by_generation": {
+        "0": {
+          "count": 393,
+          "seconds": 0.012480929990488221,
+          "collected": 0
+        },
+        "1": {
+          "count": 35,
+          "seconds": 0.017626992002078623,
+          "collected": 0
+        },
+        "2": {
+          "count": 3,
+          "seconds": 0.13182028399933188,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 16385,
+      "gc_enabled": true,
+      "repeat": 1,
+      "seconds": 0.10455756700048369,
+      "gc_seconds": 0.053280512991477735,
+      "collections_by_generation": {
+        "0": {
+          "count": 200,
+          "seconds": 0.008223963993259531,
+          "collected": 0
+        },
+        "1": {
+          "count": 18,
+          "seconds": 0.011025199997675372,
+          "collected": 0
+        },
+        "2": {
+          "count": 1,
+          "seconds": 0.03403134900054283,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 65537,
+      "gc_enabled": false,
+      "repeat": 4,
+      "seconds": 0.39656854900022154,
+      "gc_seconds": 0,
+      "collections_by_generation": {
+        "0": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "1": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 32769,
+      "gc_enabled": false,
+      "repeat": 1,
+      "seconds": 0.10915797800043947,
+      "gc_seconds": 0,
+      "collections_by_generation": {
+        "0": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "1": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 65537,
+      "gc_enabled": false,
+      "repeat": 1,
+      "seconds": 0.3461600250002448,
+      "gc_seconds": 0,
+      "collections_by_generation": {
+        "0": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "1": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 8193,
+      "gc_enabled": true,
+      "repeat": 0,
+      "seconds": 0.028751897999427456,
+      "gc_seconds": 0.006599031000405375,
+      "collections_by_generation": {
+        "0": {
+          "count": 101,
+          "seconds": 0.002842461000000185,
+          "collected": 0
+        },
+        "1": {
+          "count": 9,
+          "seconds": 0.0037565700004051905,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 8193,
+      "gc_enabled": true,
+      "repeat": 3,
+      "seconds": 0.02608145600061107,
+      "gc_seconds": 0.006487580006250937,
+      "collections_by_generation": {
+        "0": {
+          "count": 101,
+          "seconds": 0.0028262030054975185,
+          "collected": 0
+        },
+        "1": {
+          "count": 9,
+          "seconds": 0.0036613770007534185,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 65537,
+      "gc_enabled": false,
+      "repeat": 3,
+      "seconds": 0.3276966960002028,
+      "gc_seconds": 0,
+      "collections_by_generation": {
+        "0": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "1": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 32769,
+      "gc_enabled": false,
+      "repeat": 2,
+      "seconds": 0.10693495200030156,
+      "gc_seconds": 0,
+      "collections_by_generation": {
+        "0": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "1": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 65537,
+      "gc_enabled": false,
+      "repeat": 2,
+      "seconds": 0.2960477990000072,
+      "gc_seconds": 0,
+      "collections_by_generation": {
+        "0": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "1": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 16385,
+      "gc_enabled": false,
+      "repeat": 3,
+      "seconds": 0.06079242799933127,
+      "gc_seconds": 0,
+      "collections_by_generation": {
+        "0": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "1": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 8193,
+      "gc_enabled": false,
+      "repeat": 4,
+      "seconds": 0.023863814999458555,
+      "gc_seconds": 0,
+      "collections_by_generation": {
+        "0": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "1": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 65537,
+      "gc_enabled": true,
+      "repeat": 0,
+      "seconds": 0.7849356100005025,
+      "gc_seconds": 0.4643006510068517,
+      "collections_by_generation": {
+        "0": {
+          "count": 783,
+          "seconds": 0.02619125200635608,
+          "collected": 0
+        },
+        "1": {
+          "count": 71,
+          "seconds": 0.03629397000077006,
+          "collected": 0
+        },
+        "2": {
+          "count": 5,
+          "seconds": 0.40181542899972555,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 32769,
+      "gc_enabled": true,
+      "repeat": 1,
+      "seconds": 0.30756090199975006,
+      "gc_seconds": 0.19898927700796776,
+      "collections_by_generation": {
+        "0": {
+          "count": 393,
+          "seconds": 0.011999185007880442,
+          "collected": 0
+        },
+        "1": {
+          "count": 35,
+          "seconds": 0.017486249999819847,
+          "collected": 0
+        },
+        "2": {
+          "count": 3,
+          "seconds": 0.16950384200026747,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 32769,
+      "gc_enabled": false,
+      "repeat": 4,
+      "seconds": 0.10138333700069779,
+      "gc_seconds": 0,
+      "collections_by_generation": {
+        "0": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "1": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 8193,
+      "gc_enabled": true,
+      "repeat": 1,
+      "seconds": 0.03166470100040897,
+      "gc_seconds": 0.0070693659954486066,
+      "collections_by_generation": {
+        "0": {
+          "count": 101,
+          "seconds": 0.002829018994816579,
+          "collected": 0
+        },
+        "1": {
+          "count": 9,
+          "seconds": 0.004240347000632028,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 65537,
+      "gc_enabled": true,
+      "repeat": 1,
+      "seconds": 0.6491654159999598,
+      "gc_seconds": 0.4399867629808796,
+      "collections_by_generation": {
+        "0": {
+          "count": 783,
+          "seconds": 0.02357497798948316,
+          "collected": 0
+        },
+        "1": {
+          "count": 71,
+          "seconds": 0.033765298992875614,
+          "collected": 0
+        },
+        "2": {
+          "count": 5,
+          "seconds": 0.3826464859985208,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 8193,
+      "gc_enabled": true,
+      "repeat": 4,
+      "seconds": 0.030200329999388487,
+      "gc_seconds": 0.007066657001814747,
+      "collections_by_generation": {
+        "0": {
+          "count": 101,
+          "seconds": 0.002900318001593405,
+          "collected": 0
+        },
+        "1": {
+          "count": 9,
+          "seconds": 0.004166339000221342,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 16385,
+      "gc_enabled": true,
+      "repeat": 2,
+      "seconds": 0.0922123720001764,
+      "gc_seconds": 0.04607012001088151,
+      "collections_by_generation": {
+        "0": {
+          "count": 200,
+          "seconds": 0.005787226010397717,
+          "collected": 0
+        },
+        "1": {
+          "count": 18,
+          "seconds": 0.008235449000494555,
+          "collected": 0
+        },
+        "2": {
+          "count": 1,
+          "seconds": 0.03204744499998924,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 16385,
+      "gc_enabled": false,
+      "repeat": 1,
+      "seconds": 0.04063484299967968,
+      "gc_seconds": 0,
+      "collections_by_generation": {
+        "0": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "1": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 65537,
+      "gc_enabled": false,
+      "repeat": 0,
+      "seconds": 0.19989136799995322,
+      "gc_seconds": 0,
+      "collections_by_generation": {
+        "0": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "1": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 32769,
+      "gc_enabled": false,
+      "repeat": 0,
+      "seconds": 0.10140754400072183,
+      "gc_seconds": 0,
+      "collections_by_generation": {
+        "0": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "1": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 65537,
+      "gc_enabled": true,
+      "repeat": 4,
+      "seconds": 0.6876810310004657,
+      "gc_seconds": 0.46524722599224333,
+      "collections_by_generation": {
+        "0": {
+          "count": 783,
+          "seconds": 0.02423289899070369,
+          "collected": 0
+        },
+        "1": {
+          "count": 71,
+          "seconds": 0.03786374700212036,
+          "collected": 0
+        },
+        "2": {
+          "count": 5,
+          "seconds": 0.4031505799994193,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 16385,
+      "gc_enabled": true,
+      "repeat": 4,
+      "seconds": 0.10767889199996716,
+      "gc_seconds": 0.05405818500184978,
+      "collections_by_generation": {
+        "0": {
+          "count": 200,
+          "seconds": 0.006418621000193525,
+          "collected": 0
+        },
+        "1": {
+          "count": 18,
+          "seconds": 0.010275123001520114,
+          "collected": 0
+        },
+        "2": {
+          "count": 1,
+          "seconds": 0.03736444100013614,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 32769,
+      "gc_enabled": true,
+      "repeat": 0,
+      "seconds": 0.34880580799926975,
+      "gc_seconds": 0.22265440199771547,
+      "collections_by_generation": {
+        "0": {
+          "count": 393,
+          "seconds": 0.016335731000253872,
+          "collected": 0
+        },
+        "1": {
+          "count": 35,
+          "seconds": 0.02710073399794055,
+          "collected": 0
+        },
+        "2": {
+          "count": 3,
+          "seconds": 0.17921793699952104,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 16385,
+      "gc_enabled": false,
+      "repeat": 2,
+      "seconds": 0.05624822299978405,
+      "gc_seconds": 0,
+      "collections_by_generation": {
+        "0": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "1": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 8193,
+      "gc_enabled": false,
+      "repeat": 3,
+      "seconds": 0.025824979999924835,
+      "gc_seconds": 0,
+      "collections_by_generation": {
+        "0": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "1": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 16385,
+      "gc_enabled": true,
+      "repeat": 3,
+      "seconds": 0.13342467500024213,
+      "gc_seconds": 0.08224848099962401,
+      "collections_by_generation": {
+        "0": {
+          "count": 200,
+          "seconds": 0.007273421997524565,
+          "collected": 0
+        },
+        "1": {
+          "count": 18,
+          "seconds": 0.01118518800194579,
+          "collected": 0
+        },
+        "2": {
+          "count": 1,
+          "seconds": 0.06378987100015365,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 8193,
+      "gc_enabled": false,
+      "repeat": 0,
+      "seconds": 0.02300722899963148,
+      "gc_seconds": 0,
+      "collections_by_generation": {
+        "0": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "1": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 8193,
+      "gc_enabled": false,
+      "repeat": 2,
+      "seconds": 0.021910912000748795,
+      "gc_seconds": 0,
+      "collections_by_generation": {
+        "0": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "1": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 65537,
+      "gc_enabled": true,
+      "repeat": 3,
+      "seconds": 0.7063664799998151,
+      "gc_seconds": 0.46546802899774775,
+      "collections_by_generation": {
+        "0": {
+          "count": 783,
+          "seconds": 0.02472257399585942,
+          "collected": 0
+        },
+        "1": {
+          "count": 71,
+          "seconds": 0.03605356900152401,
+          "collected": 0
+        },
+        "2": {
+          "count": 5,
+          "seconds": 0.4046918860003643,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 32769,
+      "gc_enabled": false,
+      "repeat": 3,
+      "seconds": 0.10162455499994394,
+      "gc_seconds": 0,
+      "collections_by_generation": {
+        "0": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "1": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 16385,
+      "gc_enabled": false,
+      "repeat": 0,
+      "seconds": 0.06307253900013166,
+      "gc_seconds": 0,
+      "collections_by_generation": {
+        "0": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "1": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 65537,
+      "gc_enabled": true,
+      "repeat": 2,
+      "seconds": 0.7609290829996098,
+      "gc_seconds": 0.5101334199898702,
+      "collections_by_generation": {
+        "0": {
+          "count": 783,
+          "seconds": 0.027718216987523192,
+          "collected": 0
+        },
+        "1": {
+          "count": 71,
+          "seconds": 0.043080138000732404,
+          "collected": 0
+        },
+        "2": {
+          "count": 5,
+          "seconds": 0.43933506500161457,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 32769,
+      "gc_enabled": true,
+      "repeat": 3,
+      "seconds": 0.303050682000503,
+      "gc_seconds": 0.19167865099734627,
+      "collections_by_generation": {
+        "0": {
+          "count": 393,
+          "seconds": 0.012857740997787914,
+          "collected": 0
+        },
+        "1": {
+          "count": 35,
+          "seconds": 0.019633226999758335,
+          "collected": 0
+        },
+        "2": {
+          "count": 3,
+          "seconds": 0.15918768299980002,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 8193,
+      "gc_enabled": false,
+      "repeat": 1,
+      "seconds": 0.03500064699983341,
+      "gc_seconds": 0,
+      "collections_by_generation": {
+        "0": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "1": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 16385,
+      "gc_enabled": true,
+      "repeat": 0,
+      "seconds": 0.10023684299994784,
+      "gc_seconds": 0.05094007100251474,
+      "collections_by_generation": {
+        "0": {
+          "count": 200,
+          "seconds": 0.005934143003287318,
+          "collected": 0
+        },
+        "1": {
+          "count": 18,
+          "seconds": 0.009122280998781207,
+          "collected": 0
+        },
+        "2": {
+          "count": 1,
+          "seconds": 0.03588364700044622,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 32769,
+      "gc_enabled": true,
+      "repeat": 4,
+      "seconds": 0.31882116299948393,
+      "gc_seconds": 0.210439313011193,
+      "collections_by_generation": {
+        "0": {
+          "count": 393,
+          "seconds": 0.012725563008643803,
+          "collected": 0
+        },
+        "1": {
+          "count": 35,
+          "seconds": 0.018385575001957477,
+          "collected": 0
+        },
+        "2": {
+          "count": 3,
+          "seconds": 0.17932817500059173,
+          "collected": 0
+        }
+      }
+    },
+    {
+      "nodes": 8193,
+      "gc_enabled": true,
+      "repeat": 2,
+      "seconds": 0.03339172100004362,
+      "gc_seconds": 0.007877443000325002,
+      "collections_by_generation": {
+        "0": {
+          "count": 101,
+          "seconds": 0.0031803200017748168,
+          "collected": 0
+        },
+        "1": {
+          "count": 9,
+          "seconds": 0.004697122998550185,
+          "collected": 0
+        },
+        "2": {
+          "count": 0,
+          "seconds": 0,
+          "collected": 0
+        }
+      }
+    }
+  ],
+  "profiles": [
+    {
+      "nodes": 8193,
+      "total_calls": 139281,
+      "functions": [
+        {
+          "file": "indexed.py",
+          "line": 58,
+          "name": "build_acg_indexed",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_seconds": 0.047777458,
+          "cumulative_seconds": 0.075250843
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<built-in method builtins.isinstance>",
+          "calls": 40962,
+          "primitive_calls": 40962,
+          "own_seconds": 0.0062868970000000005,
+          "cumulative_seconds": 0.0062868970000000005
+        },
+        {
+          "file": "indexed.py",
+          "line": 117,
+          "name": "<genexpr>",
+          "calls": 8192,
+          "primitive_calls": 8192,
+          "own_seconds": 0.002677487,
+          "cumulative_seconds": 0.002677487
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<method 'extend' of 'list' objects>",
+          "calls": 4097,
+          "primitive_calls": 4097,
+          "own_seconds": 0.0023594180000000003,
+          "cumulative_seconds": 0.0033832660000000002
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<method 'append' of 'list' objects>",
+          "calls": 12291,
+          "primitive_calls": 12291,
+          "own_seconds": 0.0021319390000000002,
+          "cumulative_seconds": 0.0021319390000000002
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<built-in method builtins.all>",
+          "calls": 4096,
+          "primitive_calls": 4096,
+          "own_seconds": 0.002127878,
+          "cumulative_seconds": 0.004087351
+        },
+        {
+          "file": "model.py",
+          "line": 85,
+          "name": "add_transition",
+          "calls": 8192,
+          "primitive_calls": 8192,
+          "own_seconds": 0.0021049280000000003,
+          "cumulative_seconds": 0.0021049280000000003
+        },
+        {
+          "file": "indexed.py",
+          "line": 96,
+          "name": "<genexpr>",
+          "calls": 8192,
+          "primitive_calls": 8192,
+          "own_seconds": 0.001520391,
+          "cumulative_seconds": 0.001959473
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<method 'pop' of 'list' objects>",
+          "calls": 8194,
+          "primitive_calls": 8194,
+          "own_seconds": 0.0013888420000000002,
+          "cumulative_seconds": 0.0013888420000000002
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<built-in method builtins.len>",
+          "calls": 8195,
+          "primitive_calls": 8195,
+          "own_seconds": 0.001194324,
+          "cumulative_seconds": 0.001194324
+        },
+        {
+          "file": "model.py",
+          "line": 6,
+          "name": "__init__",
+          "calls": 4096,
+          "primitive_calls": 4096,
+          "own_seconds": 0.001065385,
+          "cumulative_seconds": 0.001065385
+        },
+        {
+          "file": "indexed.py",
+          "line": 110,
+          "name": "<genexpr>",
+          "calls": 8193,
+          "primitive_calls": 8193,
+          "own_seconds": 0.0010238480000000002,
+          "cumulative_seconds": 0.0010238480000000002
+        },
+        {
+          "file": "model.py",
+          "line": 52,
+          "name": "__init__",
+          "calls": 8192,
+          "primitive_calls": 8192,
+          "own_seconds": 0.000897882,
+          "cumulative_seconds": 0.000897882
+        },
+        {
+          "file": "model.py",
+          "line": 29,
+          "name": "__init__",
+          "calls": 4096,
+          "primitive_calls": 4096,
+          "own_seconds": 0.0008739710000000001,
+          "cumulative_seconds": 0.0008739710000000001
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<method 'add' of 'set' objects>",
+          "calls": 4097,
+          "primitive_calls": 4097,
+          "own_seconds": 0.000767331,
+          "cumulative_seconds": 0.000767331
+        },
+        {
+          "file": "ast_nodes.py",
+          "line": 316,
+          "name": "__init__",
+          "calls": 4096,
+          "primitive_calls": 4096,
+          "own_seconds": 0.00048762,
+          "cumulative_seconds": 0.00048762
+        },
+        {
+          "file": "ast_nodes.py",
+          "line": 334,
+          "name": "__init__",
+          "calls": 4096,
+          "primitive_calls": 4096,
+          "own_seconds": 0.00048652200000000003,
+          "cumulative_seconds": 0.00048652200000000003
+        },
+        {
+          "file": "indexed.py",
+          "line": 21,
+          "name": "__init__",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_seconds": 6.816e-05,
+          "cumulative_seconds": 7.872200000000001e-05
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<method 'disable' of '_lsprof.Profiler' objects>",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_seconds": 5.9742000000000005e-05,
+          "cumulative_seconds": 5.9742000000000005e-05
+        },
+        {
+          "file": "model.py",
+          "line": 70,
+          "name": "__init__",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_seconds": 1.0562e-05,
+          "cumulative_seconds": 1.0562e-05
+        }
+      ]
+    },
+    {
+      "nodes": 16385,
+      "total_calls": 278545,
+      "functions": [
+        {
+          "file": "indexed.py",
+          "line": 58,
+          "name": "build_acg_indexed",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_seconds": 0.09487624800000001,
+          "cumulative_seconds": 0.15429714700000002
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<built-in method builtins.isinstance>",
+          "calls": 81922,
+          "primitive_calls": 81922,
+          "own_seconds": 0.012570953000000001,
+          "cumulative_seconds": 0.012570953000000001
+        },
+        {
+          "file": "model.py",
+          "line": 85,
+          "name": "add_transition",
+          "calls": 16384,
+          "primitive_calls": 16384,
+          "own_seconds": 0.007165317,
+          "cumulative_seconds": 0.007165317
+        },
+        {
+          "file": "indexed.py",
+          "line": 117,
+          "name": "<genexpr>",
+          "calls": 16384,
+          "primitive_calls": 16384,
+          "own_seconds": 0.0050887630000000005,
+          "cumulative_seconds": 0.0050887630000000005
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<method 'append' of 'list' objects>",
+          "calls": 24579,
+          "primitive_calls": 24579,
+          "own_seconds": 0.0047093050000000004,
+          "cumulative_seconds": 0.0047093050000000004
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<method 'extend' of 'list' objects>",
+          "calls": 8193,
+          "primitive_calls": 8193,
+          "own_seconds": 0.0045685100000000005,
+          "cumulative_seconds": 0.0065178070000000005
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<built-in method builtins.all>",
+          "calls": 8192,
+          "primitive_calls": 8192,
+          "own_seconds": 0.004064008,
+          "cumulative_seconds": 0.007946608
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<method 'add' of 'set' objects>",
+          "calls": 8193,
+          "primitive_calls": 8193,
+          "own_seconds": 0.0038635970000000003,
+          "cumulative_seconds": 0.0038635970000000003
+        },
+        {
+          "file": "indexed.py",
+          "line": 96,
+          "name": "<genexpr>",
+          "calls": 16384,
+          "primitive_calls": 16384,
+          "own_seconds": 0.0030378790000000003,
+          "cumulative_seconds": 0.0038826000000000004
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<method 'pop' of 'list' objects>",
+          "calls": 16386,
+          "primitive_calls": 16386,
+          "own_seconds": 0.00265234,
+          "cumulative_seconds": 0.00265234
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<built-in method builtins.len>",
+          "calls": 16387,
+          "primitive_calls": 16387,
+          "own_seconds": 0.002321021,
+          "cumulative_seconds": 0.002321021
+        },
+        {
+          "file": "indexed.py",
+          "line": 110,
+          "name": "<genexpr>",
+          "calls": 16385,
+          "primitive_calls": 16385,
+          "own_seconds": 0.0019492970000000002,
+          "cumulative_seconds": 0.0019492970000000002
+        },
+        {
+          "file": "model.py",
+          "line": 52,
+          "name": "__init__",
+          "calls": 16384,
+          "primitive_calls": 16384,
+          "own_seconds": 0.0018169330000000002,
+          "cumulative_seconds": 0.0018169330000000002
+        },
+        {
+          "file": "model.py",
+          "line": 6,
+          "name": "__init__",
+          "calls": 8192,
+          "primitive_calls": 8192,
+          "own_seconds": 0.001777404,
+          "cumulative_seconds": 0.001777404
+        },
+        {
+          "file": "model.py",
+          "line": 29,
+          "name": "__init__",
+          "calls": 8192,
+          "primitive_calls": 8192,
+          "own_seconds": 0.0017532580000000002,
+          "cumulative_seconds": 0.0017532580000000002
+        },
+        {
+          "file": "ast_nodes.py",
+          "line": 316,
+          "name": "__init__",
+          "calls": 8192,
+          "primitive_calls": 8192,
+          "own_seconds": 0.00106302,
+          "cumulative_seconds": 0.00106302
+        },
+        {
+          "file": "ast_nodes.py",
+          "line": 334,
+          "name": "__init__",
+          "calls": 8192,
+          "primitive_calls": 8192,
+          "own_seconds": 0.001008012,
+          "cumulative_seconds": 0.001008012
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<method 'disable' of '_lsprof.Profiler' objects>",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_seconds": 0.000128322,
+          "cumulative_seconds": 0.000128322
+        },
+        {
+          "file": "indexed.py",
+          "line": 21,
+          "name": "__init__",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_seconds": 6.959000000000001e-06,
+          "cumulative_seconds": 1.1282000000000001e-05
+        },
+        {
+          "file": "model.py",
+          "line": 70,
+          "name": "__init__",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_seconds": 4.323e-06,
+          "cumulative_seconds": 4.323e-06
+        }
+      ]
+    },
+    {
+      "nodes": 32769,
+      "total_calls": 557073,
+      "functions": [
+        {
+          "file": "indexed.py",
+          "line": 58,
+          "name": "build_acg_indexed",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_seconds": 0.21415693300000002,
+          "cumulative_seconds": 0.34945472800000005
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<built-in method builtins.isinstance>",
+          "calls": 163842,
+          "primitive_calls": 163842,
+          "own_seconds": 0.028210174,
+          "cumulative_seconds": 0.028210174
+        },
+        {
+          "file": "model.py",
+          "line": 85,
+          "name": "add_transition",
+          "calls": 32768,
+          "primitive_calls": 32768,
+          "own_seconds": 0.019159052000000003,
+          "cumulative_seconds": 0.019159052000000003
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<built-in method builtins.all>",
+          "calls": 16384,
+          "primitive_calls": 16384,
+          "own_seconds": 0.013074190000000001,
+          "cumulative_seconds": 0.021387617
+        },
+        {
+          "file": "indexed.py",
+          "line": 117,
+          "name": "<genexpr>",
+          "calls": 32768,
+          "primitive_calls": 32768,
+          "own_seconds": 0.011506241,
+          "cumulative_seconds": 0.011506241
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<method 'extend' of 'list' objects>",
+          "calls": 16385,
+          "primitive_calls": 16385,
+          "own_seconds": 0.010640855000000001,
+          "cumulative_seconds": 0.014696905000000001
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<method 'append' of 'list' objects>",
+          "calls": 49155,
+          "primitive_calls": 49155,
+          "own_seconds": 0.009512963000000001,
+          "cumulative_seconds": 0.009512963000000001
+        },
+        {
+          "file": "indexed.py",
+          "line": 96,
+          "name": "<genexpr>",
+          "calls": 32768,
+          "primitive_calls": 32768,
+          "own_seconds": 0.0065338440000000005,
+          "cumulative_seconds": 0.008313427
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<method 'pop' of 'list' objects>",
+          "calls": 32770,
+          "primitive_calls": 32770,
+          "own_seconds": 0.005809211000000001,
+          "cumulative_seconds": 0.005809211000000001
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<method 'add' of 'set' objects>",
+          "calls": 16385,
+          "primitive_calls": 16385,
+          "own_seconds": 0.005568794,
+          "cumulative_seconds": 0.005568794
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<built-in method builtins.len>",
+          "calls": 32771,
+          "primitive_calls": 32771,
+          "own_seconds": 0.005187568,
+          "cumulative_seconds": 0.005187568
+        },
+        {
+          "file": "indexed.py",
+          "line": 110,
+          "name": "<genexpr>",
+          "calls": 32769,
+          "primitive_calls": 32769,
+          "own_seconds": 0.00405605,
+          "cumulative_seconds": 0.00405605
+        },
+        {
+          "file": "model.py",
+          "line": 52,
+          "name": "__init__",
+          "calls": 32768,
+          "primitive_calls": 32768,
+          "own_seconds": 0.003937846,
+          "cumulative_seconds": 0.003937846
+        },
+        {
+          "file": "model.py",
+          "line": 29,
+          "name": "__init__",
+          "calls": 16384,
+          "primitive_calls": 16384,
+          "own_seconds": 0.0039235270000000004,
+          "cumulative_seconds": 0.0039235270000000004
+        },
+        {
+          "file": "model.py",
+          "line": 6,
+          "name": "__init__",
+          "calls": 16384,
+          "primitive_calls": 16384,
+          "own_seconds": 0.00378777,
+          "cumulative_seconds": 0.00378777
+        },
+        {
+          "file": "ast_nodes.py",
+          "line": 334,
+          "name": "__init__",
+          "calls": 16384,
+          "primitive_calls": 16384,
+          "own_seconds": 0.002200992,
+          "cumulative_seconds": 0.002200992
+        },
+        {
+          "file": "ast_nodes.py",
+          "line": 316,
+          "name": "__init__",
+          "calls": 16384,
+          "primitive_calls": 16384,
+          "own_seconds": 0.002180238,
+          "cumulative_seconds": 0.002180238
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<method 'disable' of '_lsprof.Profiler' objects>",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_seconds": 3.5894e-05,
+          "cumulative_seconds": 3.5894e-05
+        },
+        {
+          "file": "indexed.py",
+          "line": 21,
+          "name": "__init__",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_seconds": 6.009e-06,
+          "cumulative_seconds": 8.48e-06
+        },
+        {
+          "file": "model.py",
+          "line": 70,
+          "name": "__init__",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_seconds": 2.471e-06,
+          "cumulative_seconds": 2.471e-06
+        }
+      ]
+    },
+    {
+      "nodes": 65537,
+      "total_calls": 1114129,
+      "functions": [
+        {
+          "file": "indexed.py",
+          "line": 58,
+          "name": "build_acg_indexed",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_seconds": 0.482493997,
+          "cumulative_seconds": 0.792987113
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<built-in method builtins.isinstance>",
+          "calls": 327682,
+          "primitive_calls": 327682,
+          "own_seconds": 0.064065021,
+          "cumulative_seconds": 0.064065021
+        },
+        {
+          "file": "model.py",
+          "line": 85,
+          "name": "add_transition",
+          "calls": 65536,
+          "primitive_calls": 65536,
+          "own_seconds": 0.054364564000000004,
+          "cumulative_seconds": 0.054364564000000004
+        },
+        {
+          "file": "indexed.py",
+          "line": 117,
+          "name": "<genexpr>",
+          "calls": 65536,
+          "primitive_calls": 65536,
+          "own_seconds": 0.023801841,
+          "cumulative_seconds": 0.023801841
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<method 'append' of 'list' objects>",
+          "calls": 98307,
+          "primitive_calls": 98307,
+          "own_seconds": 0.023199924,
+          "cumulative_seconds": 0.023199924
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<method 'extend' of 'list' objects>",
+          "calls": 32769,
+          "primitive_calls": 32769,
+          "own_seconds": 0.021979391,
+          "cumulative_seconds": 0.034356006
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<method 'add' of 'set' objects>",
+          "calls": 32769,
+          "primitive_calls": 32769,
+          "own_seconds": 0.020444564000000002,
+          "cumulative_seconds": 0.020444564000000002
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<built-in method builtins.all>",
+          "calls": 32768,
+          "primitive_calls": 32768,
+          "own_seconds": 0.01825713,
+          "cumulative_seconds": 0.036164278
+        },
+        {
+          "file": "indexed.py",
+          "line": 96,
+          "name": "<genexpr>",
+          "calls": 65536,
+          "primitive_calls": 65536,
+          "own_seconds": 0.01409786,
+          "cumulative_seconds": 0.017907148
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<method 'pop' of 'list' objects>",
+          "calls": 65538,
+          "primitive_calls": 65538,
+          "own_seconds": 0.013900434000000001,
+          "cumulative_seconds": 0.013900434000000001
+        },
+        {
+          "file": "indexed.py",
+          "line": 110,
+          "name": "<genexpr>",
+          "calls": 65537,
+          "primitive_calls": 65537,
+          "own_seconds": 0.012376615,
+          "cumulative_seconds": 0.012376615
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<built-in method builtins.len>",
+          "calls": 65539,
+          "primitive_calls": 65539,
+          "own_seconds": 0.010381048,
+          "cumulative_seconds": 0.010381048
+        },
+        {
+          "file": "model.py",
+          "line": 6,
+          "name": "__init__",
+          "calls": 32768,
+          "primitive_calls": 32768,
+          "own_seconds": 0.008529337,
+          "cumulative_seconds": 0.008529337
+        },
+        {
+          "file": "model.py",
+          "line": 29,
+          "name": "__init__",
+          "calls": 32768,
+          "primitive_calls": 32768,
+          "own_seconds": 0.008125358000000001,
+          "cumulative_seconds": 0.008125358000000001
+        },
+        {
+          "file": "model.py",
+          "line": 52,
+          "name": "__init__",
+          "calls": 65536,
+          "primitive_calls": 65536,
+          "own_seconds": 0.007756522,
+          "cumulative_seconds": 0.007756522
+        },
+        {
+          "file": "ast_nodes.py",
+          "line": 316,
+          "name": "__init__",
+          "calls": 32768,
+          "primitive_calls": 32768,
+          "own_seconds": 0.004612096,
+          "cumulative_seconds": 0.004612096
+        },
+        {
+          "file": "ast_nodes.py",
+          "line": 334,
+          "name": "__init__",
+          "calls": 32768,
+          "primitive_calls": 32768,
+          "own_seconds": 0.004522024,
+          "cumulative_seconds": 0.004522024
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "name": "<method 'disable' of '_lsprof.Profiler' objects>",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_seconds": 8.0122e-05,
+          "cumulative_seconds": 8.0122e-05
+        },
+        {
+          "file": "indexed.py",
+          "line": 21,
+          "name": "__init__",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_seconds": 6.1846e-05,
+          "cumulative_seconds": 7.9387e-05
+        },
+        {
+          "file": "model.py",
+          "line": 70,
+          "name": "__init__",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_seconds": 1.7541e-05,
+          "cumulative_seconds": 1.7541e-05
+        }
+      ]
+    }
+  ]
+}
