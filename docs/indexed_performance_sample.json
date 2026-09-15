@@ -1,0 +1,139 @@
+{
+  "python": "3.12.14",
+  "system": "Linux",
+  "scope": "Already-normalized AST to symbolic ACG; fixed single agent; no rendering, normalization, game or solver.",
+  "rows": [
+    {
+      "depth": 8,
+      "ast_nodes": 17,
+      "compiler": "reference",
+      "states": 18,
+      "seconds": [
+        0.0017093179999392305,
+        0.0019804660000772856,
+        0.0012245560001247213
+      ],
+      "median_seconds": 0.0017093179999392305
+    },
+    {
+      "depth": 8,
+      "ast_nodes": 17,
+      "compiler": "indexed",
+      "states": 18,
+      "seconds": [
+        0.00010490400018170476,
+        8.36599997455778e-05,
+        8.132400034810416e-05
+      ],
+      "median_seconds": 8.36599997455778e-05
+    },
+    {
+      "depth": 16,
+      "ast_nodes": 33,
+      "compiler": "reference",
+      "states": 34,
+      "seconds": [
+        0.006184419999954116,
+        0.006087861000196426,
+        0.00608952299990051
+      ],
+      "median_seconds": 0.00608952299990051
+    },
+    {
+      "depth": 16,
+      "ast_nodes": 33,
+      "compiler": "indexed",
+      "states": 34,
+      "seconds": [
+        0.00011875900008817553,
+        0.0001166279998869868,
+        0.00016223700004047714
+      ],
+      "median_seconds": 0.00011875900008817553
+    },
+    {
+      "depth": 32,
+      "ast_nodes": 65,
+      "compiler": "reference",
+      "states": 66,
+      "seconds": [
+        0.0305314840002211,
+        0.03400316999977804,
+        0.028778546000012284
+      ],
+      "median_seconds": 0.0305314840002211
+    },
+    {
+      "depth": 32,
+      "ast_nodes": 65,
+      "compiler": "indexed",
+      "states": 66,
+      "seconds": [
+        0.00019776899989665253,
+        0.00022158699994179187,
+        0.0003264669999225589
+      ],
+      "median_seconds": 0.00022158699994179187
+    },
+    {
+      "depth": 64,
+      "ast_nodes": 129,
+      "compiler": "reference",
+      "states": 130,
+      "seconds": [
+        0.1773897430002762,
+        0.1750227630000154,
+        0.17379041500043968
+      ],
+      "median_seconds": 0.1750227630000154
+    },
+    {
+      "depth": 64,
+      "ast_nodes": 129,
+      "compiler": "indexed",
+      "states": 130,
+      "seconds": [
+        0.0003879920000144921,
+        0.0005061829997430323,
+        0.00039530599997306126
+      ],
+      "median_seconds": 0.00039530599997306126
+    },
+    {
+      "depth": 256,
+      "ast_nodes": 513,
+      "compiler": "indexed",
+      "states": 514,
+      "seconds": [
+        0.0014861509998809197,
+        0.001709903000119084,
+        0.0017147869998552778
+      ],
+      "median_seconds": 0.001709903000119084
+    },
+    {
+      "depth": 1024,
+      "ast_nodes": 2049,
+      "compiler": "indexed",
+      "states": 2050,
+      "seconds": [
+        0.006750972999725491,
+        0.01052021599980435,
+        0.006910075999712717
+      ],
+      "median_seconds": 0.006910075999712717
+    },
+    {
+      "depth": 4096,
+      "ast_nodes": 8193,
+      "compiler": "indexed",
+      "states": 8194,
+      "seconds": [
+        0.054725787000279524,
+        0.05619092400002046,
+        0.04015211299974908
+      ],
+      "median_seconds": 0.054725787000279524
+    }
+  ]
+}

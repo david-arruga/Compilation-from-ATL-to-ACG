@@ -16,3 +16,5 @@ __all__ = [
     "compute_acg_size",
     "CGS",
 ]
+from .indexed import IndexedACG, StateID, build_acg_indexed
+__all__ += ["IndexedACG", "StateID", "build_acg_indexed"]

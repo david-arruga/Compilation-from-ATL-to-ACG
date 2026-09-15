@@ -217,3 +217,23 @@ Siguiente frente: constructor indexado sin copias/hashing de árboles completos,
 con correspondencia semántica explícita. Mantener como referencia el constructor
 actual y sus comprobaciones. No se actualiza LaTeX ni se proclama rendimiento
 lineal del software a partir de una curva o del número de estados.
+
+## Bloque 8 — constructor indexado
+
+Añadido `acg/indexed.py`: recorrido iterativo por ocurrencias y polaridad,
+transiciones sobre IDs, sin copia/hashing de subárboles. Se exporta desde acg.
+`main.py` utiliza el constructor indexado por defecto y conserva
+`--compiler reference`. Los imports explícitos build_acg_final no cambian.
+Documentación en `docs/INDEXED_COMPILER.md`; comparador reproducible en
+`scripts/compare_compilers.py`, con datos en `docs/indexed_performance_sample.json`.
+
+Validación: 32 pruebas correctas; 82 entradas cotejadas por proyección completa
+de transiciones y aceptación frente a la referencia. Compilación de 5000 G
+sin recursión de Python, 10001 visitas AST y 10002 estados. Ejemplo CLI con
+indexado: YES, 77 vértices, 109 aristas. Constructor de referencia intacto.
+
+La linealidad se argumenta en el modelo de referencias/contenedores con agentes
+fijos; no se afirma una verificación del tiempo de CPython ni la constante exacta
+Lean. Normalización/renderizado/alfabeto explícito/juego/solver quedan separados.
+Pendientes: migración explícita de benchmarks y documentación de ejemplos,
+reproducción de evaluación y traslado de estas notas al LaTeX revisado.

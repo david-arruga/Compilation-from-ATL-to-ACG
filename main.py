@@ -1,5 +1,5 @@
 from preprocessing import tokenize, parse, apply_modal_dualities, normalize_formula
-from acg import build_acg_final, compute_acg_size
+from acg import build_acg_final, build_acg_indexed, compute_acg_size
 from acceptance_game import build_game, pretty_node
 from buchi_solver import solve_buchi_game
 from acceptance_game.examples import cgs1, cgs2, cgs3, cgs4
@@ -16,13 +16,14 @@ def pick_cgs(idx: int):
         return cgs4
     raise ValueError("cgs must be 1..4")
 
-def run_once(formula: str, cgs_idx: int, materialize_alphabet: bool, full_arena: bool = False):
+def run_once(formula: str, cgs_idx: int, materialize_alphabet: bool, full_arena: bool = False, compiler: str = "indexed"):
     ast = parse(tokenize(formula))
     ast = apply_modal_dualities(ast)
     ast = normalize_formula(ast)
     cgs = pick_cgs(cgs_idx)
     cgs.validate()
-    acg = build_acg_final(ast, cgs, materialize_alphabet=materialize_alphabet)
+    constructor = build_acg_indexed if compiler == "indexed" else build_acg_final
+    acg = constructor(ast, cgs, materialize_alphabet=materialize_alphabet)
     V, E, S1, S2, B, initial = build_game(acg, cgs, full_arena=full_arena)
     Sj, W_total = solve_buchi_game(V, E, S1, S2, B)
     winner = "player 0" if initial in Sj else "player 1"
@@ -50,8 +51,9 @@ def main():
     p.add_argument("--cgs", type=int, default=1, choices=[1,2,3,4])
     p.add_argument("--alphabet", action="store_true")
     p.add_argument("--full-arena", action="store_true", help="Build every Q x S configuration, as in chapter 4")
+    p.add_argument("--compiler", choices=["indexed", "reference"], default="indexed")
     args = p.parse_args()
-    run_once(args.formula, args.cgs, args.alphabet, args.full_arena)
+    run_once(args.formula, args.cgs, args.alphabet, args.full_arena, args.compiler)
 
 if __name__ == "__main__":
     main()
